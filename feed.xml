@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.3.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-12-08T19:13:02+08:00</updated><id>/</id><title type="html">Autumn</title><subtitle>Christine's blog
+</subtitle><entry><title type="html">Start of the rest</title><link href="/life/2017/12/06/start.html" rel="alternate" type="text/html" title="Start of the rest" /><published>2017-12-06T00:00:00+08:00</published><updated>2017-12-06T00:00:00+08:00</updated><id>/life/2017/12/06/start</id><content type="html" xml:base="/life/2017/12/06/start.html">&lt;h2 id=&quot;a-new-blog&quot;&gt;a new blog&lt;/h2&gt;
+
+&lt;p&gt;testtest 看一下中文的显示&lt;/p&gt;
+
+&lt;!-- excerpt --&gt;
+
+&lt;h2 id=&quot;ye&quot;&gt;ye&lt;/h2&gt;</content><author><name></name></author><summary type="html">a new blog</summary></entry><entry><title type="html">REST API 学习笔记</title><link href="/tech/2017/06/27/RESTFULAPI.html" rel="alternate" type="text/html" title="REST API  学习笔记" /><published>2017-06-27T00:00:00+08:00</published><updated>2017-06-27T00:00:00+08:00</updated><id>/tech/2017/06/27/RESTFULAPI</id><content type="html" xml:base="/tech/2017/06/27/RESTFULAPI.html">&lt;p&gt;为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。&lt;/p&gt;
+
+&lt;h2 id=&quot;rest-是基于资源的&quot;&gt;REST 是基于资源的&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;各个资源虽然可能有关联，但依旧是能够简单地切掉这些关联导致相互独立的，所以不会有非常乱的耦合性&lt;/li&gt;
+  &lt;li&gt;对资源的操作就这么几种，所以很容易设计一致的URL&lt;/li&gt;
+  &lt;li&gt;我们明白对资源的读操作是无副作用的，所以能玩缓存&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;区分不同-methods-的应用场景&quot;&gt;区分不同 Methods 的应用场景&lt;/h2&gt;
+&lt;p&gt;HTTP协议提供了很多methods来操作数据：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;GET: 获取某个资源，GET操作应该是幂等（idempotence）的，且无副作用。&lt;/li&gt;
+  &lt;li&gt;POST: 创建一个新的资源。&lt;/li&gt;
+  &lt;li&gt;PUT: 替换某个已有的资源。PUT操作虽然有副作用，但其应该是幂等的。&lt;/li&gt;
+  &lt;li&gt;PATCH（RFC5789）: 修改某个已有的资源（部分更新）。&lt;/li&gt;
+  &lt;li&gt;DELETE：删除某个资源。DELETE操作有副作用，但也是幂等的。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;例如：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;GET /tickets - 获取 tickets 列表&lt;/li&gt;
+  &lt;li&gt;GET /tickets/12 - 获取一个单独的 ticket&lt;/li&gt;
+  &lt;li&gt;POST /tickets - 创建一个新的 ticket&lt;/li&gt;
+  &lt;li&gt;PUT /tickets/12 - 更新 ticket #12&lt;/li&gt;
+  &lt;li&gt;PATCH /tickets/12 - 部分更新 ticket #12&lt;/li&gt;
+  &lt;li&gt;DELETE /tickets/12 - 删除 ticket #12&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;headers-规范&quot;&gt;Headers 规范&lt;/h2&gt;
+&lt;p&gt;1.安全性&lt;/p&gt;
+
+&lt;p&gt;OAuth：‘Authorization:token’&lt;/p&gt;
+
+&lt;p&gt;HMAC Auth：
+‘Authorization:access-key:access-secret’和‘Data:’
+access-key和access-secret:前者可以暴露在网络中，后者必须安全保存。当客户端调用API时，用自己的access-secret按照要求对request的headers/body计算HMAC，然后把自己的access-key和HMAC填入Authorization头中。服务器拿到这个头，从数据库（或者缓存）中取出access-key对应的secret，按照相同的方式计算HMAC，如果其与Authorization header中的一致，则请求是合法的，且未被修改过的；否则不合法。&lt;/p&gt;
+
+&lt;p&gt; &lt;/p&gt;
+
+&lt;p&gt;2.完整性&lt;/p&gt;
+
+&lt;p&gt;if-Match:Etag&lt;/p&gt;
+
+&lt;p&gt;Etag可以认为是某个资源的一个唯一的版本号。当客户端请求某个资源时，该资源的Etag一同被返回，而当客户端需要修改该资源时，需要通过”If-Match”头来提供这个Etag。服务器检查客户端提供的Etag是否和服务器同一资源的Etag相同，如果相同，才进行修改，否则返回412 precondition failed。&lt;/p&gt;
+
+&lt;p&gt;使用Etag可以防止错误更新。比如A拿到了Resource X的Etag X1，B也拿到了Resource X的Etag X1。B对X做了修改，修改后系统生成的新的Etag是X2。这时A也想更新X，由于A持有旧的Etag，服务器拒绝更新，直至A重新获取了X后才能正常更新。&lt;/p&gt;
+
+&lt;p&gt; &lt;/p&gt;
+
+&lt;p&gt;3.返回数据的格式&lt;/p&gt;
+
+&lt;p&gt;Accept：
+    服务器需要返回什么样的content。
+    如果客户端要求返回”application/xml”，服务器端只能返回”application/json”，那么最好返回status code 406 not acceptable（RFC2616），当然，返回application/json也并不违背RFC的定义。一个合格的REST API需要根据Accept头来灵活返回合适的数据。&lt;/p&gt;
+
+&lt;p&gt;If-Modified-Since/If-None-Match：
+    如果客户端提供某个条件，那么当这条件满足时，才返回数据，否则返回304 not modified。比如客户端已经缓存了某个数据，它只是想看看有没有新的数据时，会用这两个header之一，服务器如果不理不睬，依旧做足全套功课，返回200 ok，那就既不专业，也不高效了。&lt;/p&gt;
+
+&lt;p&gt;If-Match：
+    在对某个资源做PUT/PATCH/DELETE操作时，服务器应该要求客户端提供If-Match头，只有客户端提供的Etag与服务器对应资源的Etag一致，才进行操作，否则返回412 precondition failed。这个头非常重要，下文详解。&lt;/p&gt;
+
+&lt;h2 id=&quot;请求数据验证&quot;&gt;请求数据验证&lt;/h2&gt;
+&lt;p&gt;Request headers是否合法
+    比如说你的API需要某个特殊的私有头（e.g. X-Request-ID），那么凡是没有这个头的请求一律拒绝。这可以防止各类漫无目的的webot或crawler的请求，节省服务器的开销。&lt;/p&gt;
+
+&lt;p&gt;Request URI和Request body是否合法
+    比如说，API只允许querystring中含有query，那么”?sort=desc”这样的请求需要直接被    拒绝。有不少攻击会在querystring和request body里做文章，最好的对应策略是，过滤所有含有不该出现的数据的请求。&lt;/p&gt;
+
+&lt;h2 id=&quot;status-code-规范&quot;&gt;status code 规范&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;200 (OK) – General success status code. Most common code to indicate success.&lt;/li&gt;
+  &lt;li&gt;201 (CREATED) – Successful creation occurred (via either POST or PUT). Set the Location header to contain a link to the newly-created resource. Response body content may or may not be present.&lt;/li&gt;
+  &lt;li&gt;204 (NO CONTENT) – Status when wrapped responses are not used and nothing is in the body (e.g. DELETE).&lt;/li&gt;
+  &lt;li&gt;304 (NOT MODIFIED) – Used in response to conditional GET calls to reduce band-width usage. If used, must set the Date, Content-Location, Etag headers to what they would have been on a regular GET call. There must be no response body.&lt;/li&gt;
+  &lt;li&gt;400 (BAD REQUEST) – General error when fulfilling the request would cause an invalid state. Domain validation errors, missing data, etc. are some examples.&lt;/li&gt;
+  &lt;li&gt;401 (UNAUTHORIZED) – Error code for a missing or invalid authentication token.&lt;/li&gt;
+  &lt;li&gt;403 (FORBIDDEN) – Error code for user not authorized to perform the operation, doesn’t have rights to access the resource, or the resource is unavailable for some reason (e.g. time constraints, etc.).&lt;/li&gt;
+  &lt;li&gt;404 (NOT FOUND) – Used when the requested resource is not found, whether it doesn’t exist or if there was a 401 or 403 that, for security reasons, the service wants to mask.&lt;/li&gt;
+  &lt;li&gt;409 (CONFLICT) – Whenever a resource conflict would be caused by fulfilling the request. Duplicate entries, deleting root objects when cascade-delete not supported are a couple of examples.&lt;/li&gt;
+  &lt;li&gt;500 (INTERNAL SERVER ERROR) – The general catch-all error when the server-side throws an exception.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;要说自己会rest我觉得至少回答2个问题&quot;&gt;要说自己会REST，我觉得至少回答2个问题：&lt;/h2&gt;
+&lt;p&gt;1.对于用户登录和用户退出这两个业务需求，REST指导下的架构和设计如何满足&lt;/p&gt;
+
+&lt;p&gt;登入/登出对应的服务端资源应该是session，所以相关api应该如下：
+GET /session # 获取会话信息
+POST /session # 创建新的会话（登入）
+PUT /session # 更新会话信息
+DELETE /session # 销毁当前会话（登出）&lt;/p&gt;
+
+&lt;p&gt;而注册对应的资源是user，api如下：
+GET /user/:id # 获取id用户的信息
+POST /user # 创建新的用户（注册）
+PUT /user/:id # 更新id用户的信息
+DELETE /user/:id # 删除id用户（注销）&lt;/p&gt;
+
+&lt;p&gt;2.批量的删除、修改、新增如何满足
+使用可以自由添加 body 的库，使用的库不可以自由添加 body 时：
+DELETE /posts?id=1,2,3,4
+DELETE /posts?id&amp;gt;3&amp;amp;id&amp;lt;5
+修改和新增不是直接在 body 里面加 list 就好了嘛？&lt;/p&gt;</content><author><name></name></author><summary type="html">为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。</summary></entry><entry><title type="html">Web 框架中对于 MVC 架构的优化策略</title><link href="/tech/2017/06/12/MVC.html" rel="alternate" type="text/html" title="Web 框架中对于 MVC 架构的优化策略" /><published>2017-06-12T00:00:00+08:00</published><updated>2017-06-12T00:00:00+08:00</updated><id>/tech/2017/06/12/MVC</id><content type="html" xml:base="/tech/2017/06/12/MVC.html">&lt;p&gt;MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。
+MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。&lt;/p&gt;
+
+&lt;p&gt;在 web2.0 兴起后，网页应用不满足于单纯的静态数据展示，需要根据用户的行为展示不同的信息，之前的服务器端直接返回静态页面的交互方式已经不适用。MVC 架构模式的特性使得它也可以很好的支持 web 开发，因此很多语言也为使用 MVC 架构构建 web 应用提供了解决方案 —— 提供模板引擎，比如 Python 的 Django。这种开发技术的主要思想便是使用模板引擎作为 view，根据 Controller 传入的 Model 渲染出对应的 HTML 页面传回客户端浏览器。&lt;/p&gt;
+
+&lt;p&gt;不过随着计算机的快速发展、移动端的爆炸式普及，由服务器端渲染页面传回客户端的解决方案已经难以适用于一部分场景：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;同一个应用需要跨平台（web 端、PC 端、移动端）并且需要与后台交互的时候，服务器端对 web 的支持如果只停留在使用模板引擎渲染页面返回上，则需要另外再对移动端和 PC 端设计接口并实现，这样做会增加代码的冗余并且使得项目难以维护。&lt;/li&gt;
+  &lt;li&gt;虽然大多模板引擎支持组件的拆分组合，使得部分前端代码可以复用，但是这种复用实现不灵活。一是在渲染网页的时候，是基于页面的，所以这样的拆分基本只是页面+页面的部分，简单来说只有嵌套只有两层；二是在做页面的部分刷新（而非整页刷新）的时候，通常的做法是需要服务器端传回一段代码再插入页面中，这样的交互显然比较低效。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;从多个角度看来，在一些应用场景中，传统的 web 架构需要进行修改和变革，特别是在前后端的交互方式上。&lt;/p&gt;
+
+&lt;p&gt;目前的解决方案便是前后端分离 —— 服务器端并不需要知道页面长什么样，即并不需要有 View 的部分，它只需要给客户端提供它所需要的数据即 Model 即可。而如何响应用户的操作、什么情况下需要什么样的数据，则由客户端独立完成。&lt;/p&gt;
+
+&lt;p&gt;这样的方案增加了传统的 View 层的复杂度，也带来了负责的客户端如何组织的新问题，一些基于 JS 的前端框架应运而生。这些前端框架需要解决的是数据和组件之间的关系，大多运用了优化后的 MVC 架构模式 —— 优化主要是针对 Controller 部分的。&lt;/p&gt;
+
+&lt;h3 id=&quot;angular--mvvm&quot;&gt;Angular —— MVVM&lt;/h3&gt;
+
+&lt;p&gt;MVVM 是 Model-View-ViewModel 的缩写，源于 MVP 架构，它的主要思想是为 View 单独构建一个特殊的 Model 即 ViewModel。
+下图展示了 MVC、MVP 和 MVVM 之间的联系和区别。
+&lt;img src=&quot;/assets/12969C82C646C4E85D99C12BF2438EA9.png&quot; alt=&quot;MVVM-comparson.png&quot; /&gt;
+MVP 对 MVC 的改进是切断了 View 和 Model 之间的直接联系，将 Controller 变为 Presenter，直接改变 View。三个部分之间的两两单向循环数据流变成了双向的数据流。
+个人理解是，这样的优化使得模块之间的关系更加简单，对于 View 和 Model  来说，改变的来源和得到用户交互后需要通知的组件变为了同一个。
+MVVM 乍看和 MVP 一样（确实也没多大差别），不过他们最重要的区别在于 View 和 Controller（简化称呼，即 MVP 里的 Presenter 和 MVVM 里的 ViewModel）之间的交互方式。下面是某篇博文里的说明：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;For instance if View had a property IsChecked and Presenter was setting it in classic MVP, in MVVM ViewModel will have that IsChecked Property which View will sync up with.
+举例来说，如果 View 有一个是否被选择的属性，经典 MVP 中 Presenter 会设置 View 中的这个属性，而 MVVM 中，ViewModel 会拥有这个属性，并且 View 会随时随着这个属性的值进行变化。&amp;gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;个人理解是，两个架构的区别在于是否需要在代码里明确写出对 view 状态的改变。
+使用 MVVM 架构的典型框架是 Angular。&lt;/p&gt;
+
+&lt;h3 id=&quot;redux--action--reducer--controller&quot;&gt;Redux —— Action + Reducer = Controller&lt;/h3&gt;
+&lt;p&gt;这一种架构思想化，是我在学习 React &amp;amp; Redux 的时候了解到的。React 作为轻量级前端框架，处理的是 viewshuj 层相关内容，Redux 则处理数据。因为 Redux 处理数据流的思路包含很多关于函数式编程的思想，所以它是不是对 MVC 架构的一种演变，也不能完全确定，目前为止这个架构也没有特定的名字。
+但是由于我在使用过程中得到了很大的启发，甚至可以说是被惊艳到了，以及阿里针对 React &amp;amp; Redux 开发的轻量级框架 dva 中，为了简化理解，封装出了一个 Model 的概念，我们暂且就不管一些定义上的问题，将关注点放在优秀的架构思想本身上吧！
+Redux 中非常重要的三个概念是 Store、Action 和 Reducer。&lt;/p&gt;
+
+&lt;h4 id=&quot;store&quot;&gt;Store&lt;/h4&gt;
+&lt;p&gt;Store 是一个树状的、存储全局状态的纯数据结构体，在 JS 中就是一个 JSON 格式的数据对象。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;// 这是一个简易的 TODO 应用的 Store 设计
+{
+  visibilityFilter: 'SHOW_ALL',
+  todos: [
+    {
+      text: 'Consider using Redux',
+      completed: true,
+    },
+    {
+      text: 'Keep all state in a single tree',
+      completed: false
+    }
+  ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&quot;action&quot;&gt;Action&lt;/h4&gt;
+&lt;p&gt;Action 负责描述 Store 需要作出怎样的改变，通常含有一个 type （指明 Action 的类型以及要被哪个函数接受处理），和具体的需要传输的数据。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;// Action 一般会通过 dispatch 函数被传递给相应的处理函数。
+// 在下面的代码中，大括号内的便是一个 Action
+// type 描述了这是一个添加 TODO 项的行为
+// payload 中含有添加的 TODO 项的内容
+
+dispatch({
+  type:ADD_TODO,
+  payload:{
+    text:'finish homework',
+  }
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&quot;reducer&quot;&gt;Reducer&lt;/h4&gt;
+&lt;p&gt;Reducer 是纯函数，它的作用是接收 Action，并且根据旧的 Store 和 接收到的Action 产生新的 Store。
+这一过程可以被描述为 preStore + Action = newStore。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-js&quot;&gt;// 下面的代码是一个 Reducer 函数，它展现了上面的 ADD_TODO Action 将会如何被处理
+// 首先该函数接受的参数由两个，当前的 Store，以及需要处理的 Action
+// 通过对 Action 中的 type 进行筛选对比，将 Action 传给响应的函数处理，这里只展示了 ADD_TODO 的处理函数
+// ADD_TODO 中的函数作用便是通过原有的 Store 和需要增加的 TODO 事件内容，生成新的 Store 并返回
+function todoApp(state = initialState, action) {
+  switch (action.type) {
+    case ADD_TODO:
+      return Object.assign({}, state, {
+        todos: [
+          ...state.todos,
+          {
+            text: action.text,
+            completed: false
+          }
+        ]
+      })
+    case TOGGLE_TODO:
+      return ...
+    default:
+      return state
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;简单来说，Redux 将传统 MVC 架构中的 Controller 分为了 Action 和 Reducer 两个部分，前者描述要做出什么样的改变，后者实现改变。
+Redux 和 React 配合使用时，React 负责 view 的部分，view 根据 Store 内容做出相应的展示，接受到用户操作时，通过发出 Action 来实现和用户的交互。各部分之间的关系如下：
+&lt;img src=&quot;/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg&quot; alt=&quot;Relation&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;除此之外，需要关注的是当应用复杂时，我们应该拆分 Reducer，即使用更多的 Reducer 来处理 Action，而不是创建更多的 Store。在 Redux 中，Store 始终是单一的。这一点和另外一种架构前端处理数据的框架 Flux 有很大的区别，Flux 的做法是使用多个 store，但是使用单一的 dispatcher 来分发处理 Action，对比图如下。
+左边是 Flux，右边是 Redux。
+&lt;img src=&quot;/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png&quot; alt=&quot;ReduxFlux.png&quot; /&gt;
+对比之下会发现在这一点上 Redux 对 Flux 的改进简直是非常天才的。
+单一的 Store 减少了 Java 的仪式感：单一的树状状态数据可以用最简洁的方式存储全局的数据，不同组件用相同数据时，只要拿相同的部分就可以了。而传统的 Java 服务端中，是用多个 Model 存储不同的数据，对于以界面展示为重要功能的前端中，这样的方式显得非常冗余。
+多个 Reducer 处理解决了单一 dispatcher 会有性能瓶颈的问题。
+而单一的数据源，映射到不同的组件中，各组件根据用户的操作会发出 Action，最终会产生新的 Store 树。这样的先映射再分别处理的方法，让人联想到数据处理中的 Map-Reduce 架构模式，从数据流角度来看 Redux，则有新的体会了。&lt;/p&gt;</content><author><name></name></author><summary type="html">MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。 MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。</summary></entry><entry><title type="html">Transition Motion in Material Design</title><link href="/tech/2017/05/11/test.html" rel="alternate" type="text/html" title="Transition Motion in Material Design" /><published>2017-05-11T00:00:00+08:00</published><updated>2017-05-11T00:00:00+08:00</updated><id>/tech/2017/05/11/test</id><content type="html" xml:base="/tech/2017/05/11/test.html">&lt;p&gt;Material Design 中最让人眼前一亮的应该就是它推出的动效标准了，这次仔细地看完了 Material Design 的所有官方文档，对其中的动效做了探究。&lt;/p&gt;
+
+&lt;h3 id=&quot;principles&quot;&gt;Principles&lt;/h3&gt;
+&lt;hr /&gt;
+&lt;p&gt;要了解一种设计语言，需要从它坚持的最基本的概念开始入手，比如在理解与 iOS 6截然不同的 iOS 7 设计风格时，就需要了解扁平化这一基本概念，理解 MD 时也是一样的。
+Material Design 坚持的设计原则有三个：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Material is the metaphor - 对于材质的隐喻&lt;/li&gt;
+  &lt;li&gt;Bold, graphic, intentional - 通过基于打印的设计强调关注点，制造沉浸式体验&lt;/li&gt;
+  &lt;li&gt;Motion provides meaning - 移动是有意义的&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;material-is-the-metaphor---对于材质的隐喻&quot;&gt;Material is the metaphor - 对于材质的隐喻&lt;/h4&gt;
+&lt;p&gt;官方文档中有以下内容：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;A material metaphor is the unifying theory of a rationalized space and a system of motion.
+材质的隐喻是有合理解释的空间和一系列移动的统一理论。
+The fundamentals of light, surface, and movement are key to conveying how objects move, interact, and exist in space and in relation to each other. Realistic lighting shows seams, divides space, and indicates moving parts.
+光线、物体的表面、运动是表述物体如何运动，交互，在空间中存在并且互相产生联系的关键。现实中的光，展现了线缝、分隔空间，并且知识了移动的部分。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;在 Material Design 中，对于材质的体现，最明显的规定就是关于高度（Elevation）和阴影（Shadow）的。
+物体之间的高度和距离是通过阴影展现和区别的。这样的规定，不仅展示了静态元素之间的高度关系，还在元素的动态变换中给出了一些逻辑。&lt;/p&gt;
+
+&lt;p&gt;在官方给出的标准中，每一种控件都有自己应有的高度：
+&lt;img src=&quot;/assets/BA52FA4533A95466A319B2AEE5B71ED0.png&quot; alt=&quot;whatismaterial_3d_elevation2.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;实际的例子：
+&lt;img src=&quot;/assets/995059C0D554562A0CCE211C7C02301C.jpg&quot; alt=&quot;995059C0D554562A0CCE211C7C02301C.jpg&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;bold-graphic-intentional---通过基于印刷的设计强调关注点制造沉浸式体验&quot;&gt;Bold, graphic, intentional - 通过基于印刷的设计强调关注点，制造沉浸式体验&lt;/h4&gt;
+&lt;p&gt;官方文档中对这一项的说明有：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;The foundational elements of print-based design – typography, grids, space, scale, color, and use of imagery – guide visual treatments.
+基于打印的设计的功能性元素有：排印、格栅、空白、标量、颜色、视觉指引处理手段的使用。
+They create hierarchy, meaning, and focus.
+他们共同创建了层级、意义和焦点&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;在 Material Design 中，使用这些元素并不仅仅是做一套纯视觉的、愉悦眼球的设计规范，其核心思想是使用印刷中所用到的技术，来引导用户的浏览顺序、给出需要用户关注的强调点，从而制造沉浸式的用户体验。&lt;/p&gt;
+
+&lt;p&gt;在官方给出的两个例子中，可以很明显地展现这一点：
+&lt;img src=&quot;/assets/7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; alt=&quot;7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; /&gt;
+&lt;em&gt;这个界面是以信息展示为主要的服务，功能性的按钮不应该突出显示，右图的突出按钮破坏了用户浏览内容时收到的信息流，比较突兀。&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; alt=&quot;DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; /&gt;
+这个界面提供的服务是对于应用的设置，是一个功能性的界面，应该让用户在最短的时间内找到自己可以进行的所有操作，显然左图更加合适。&lt;/p&gt;
+
+&lt;p&gt;除此之外，这一项的官方说明还有这样的一句话：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;An emphasis on user actions makes core functionality immediately apparent and provides waypoints for the user.
+对于用户操作的关注让核心功能立即明显，并且为用户提供了视觉停留点
+视频：button的不同状态
+&lt;a href=&quot;/assets/8B4CFE77C56BFB6B3D7CCEE8B0852EA1.mp4&quot;&gt;components-buttons-raisedbuttons.mp4&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;motion-provides-meaning---移动是有意义的&quot;&gt;Motion provides meaning - 移动是有意义的&lt;/h4&gt;
+&lt;p&gt;继画图标和设计网页之后，前端设计界这两年又出现了一个新的热门，就是动效设计。但是在看到众多复杂的动效的时候，我们不仅要考虑到这样的效果是否漂亮、预约眼球，还要考虑的是这样的效果有没有必要？&lt;/p&gt;
+
+&lt;p&gt;在刚从华为手机换到小米的时候，我确实有几天的不适应时间——动效太复杂了，在一些过场动画的播放过程中我都觉得是在浪费我的时间。比如应用切换时前一个应用缩小向后隐去，新的应用从下方放大跳出来，时间长得让我觉得自己在等待这个动效完成。这样子的动作有什么意义吗？为什么一定要这么久？这个应用切换动效，在我看来就是不必要的、失败的。&lt;/p&gt;
+
+&lt;p&gt;而 Material Design 的动效，试图给所有的动作一个合理的原因，这个原因不仅包含该设计对现实世界的模拟（比如重力），还解释了为什么要给用户提供这个动效。&lt;/p&gt;
+
+&lt;p&gt;官方文档中有这样的表述：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Primary user actions are inflection points that initiate motion, transforming the whole design.
+Motion is meaningful and appropriate, serving to focus attention and maintain continuity.
+用户最开始的行动是初始化动效的变化点，引起整个设计的变化。
+动效是有意义的、合适的，是为聚焦注意力和维持连贯性服务的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;这里只给出对于重力的解释，其他的之后详说：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Rising against gravity in the real world requires effort. Elements moving upward on the screen should similarly depict effort during acceleration through a slower upward movement.
+当现实生活中的物体抵抗重力向上移动的时候需要付出努力。屏幕上的元素在向上移动的时候也要相似地模拟这样的努力，通过一个减缓的向上的移动。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Do &amp;amp; Dont
+&lt;a href=&quot;/assets/2F2C16BA85645A30E64E07D5C7D04F0F.mp4&quot;&gt;ShiftWithin_01_Upward_Do_v3.mp4&lt;/a&gt;
+&lt;a href=&quot;/assets/B370893CE808F0DDC083F0DA62E47EB2.mp4&quot;&gt;ShiftWithin_02_Upward_Dont_v3.mp4&lt;/a&gt;
+&lt;a href=&quot;/assets/8295EFA7C63E0E97ED12DCEF360CF8C0.mp4&quot;&gt;Natural_03_Transform-v3.mp4&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;layouts&quot;&gt;Layouts&lt;/h3&gt;
+&lt;hr /&gt;
+&lt;p&gt;考虑到动效大致上分为两种，一种是很小范围内的，比如一个 button 被点击时的水波纹动效；还有一种是以 page 为单位的，比如 iOS 中的新页面从右侧向左侧滑入，旧页面褪色至透明看不见。&lt;/p&gt;
+
+&lt;p&gt;因为页面间的转换动效暗含页面之间的逻辑关系，所以理解第二种动效需要对设计语言的布局规范、信息展示方式有一定的了解。&lt;/p&gt;
+
+&lt;p&gt;在 Material Design 中，使用了大量基于印刷的设计元素，展示信息的背景便也相应地模仿了纸张所拥有的属性。&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;In material design, the physical properties of paper are translated to the screen. The background of an application resembles the flat, opaque texture of a sheet of paper, and an application’s behavior mimics paper’s ability to be re-sized, shuffled, and bound together in multiple sheets.
+在 Material Design 中，纸张的物理属性会被转化到屏幕上。一个应用的背景类似于扁平的、不透明质感的一张纸。一个应用的行为模仿了多张纸改变大小、移动重组、互相装订的能力。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;此外，Material Design 还提倡使用卡片式的信息展示方式：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;当一组信息拥有特殊的行为，或者是信息之间的区分需要比空白或者分割线更明显的分隔时。
+（之前记下的中文，但是原文在哪里暂时没找到）&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;大致了解以上的信息可以更好地理解以 page 为单位的动效。&lt;/p&gt;
+
+&lt;h3 id=&quot;to-page-motion&quot;&gt;To-Page Motion&lt;/h3&gt;
+&lt;hr /&gt;
+&lt;p&gt;当页面跳转的结果为一整个页面时，过渡类型也分为两类。第一类是从页面中的一个小元素跳到新的页面，第二类是兄弟节点之间的转换。&lt;/p&gt;
+
+&lt;h4 id=&quot;parent-to-child&quot;&gt;Parent-to-child&lt;/h4&gt;
+&lt;p&gt;页面中的一个小元素触发一个新的页面的效果中，小元素可以是列表中的一项，或者是页面上的一个按钮、图标。而在 Material Design 中，当以一个元素为初始点触发新页面时，通常的效果是，该元素  z 轴高度增加，尺寸放大，沿 y 轴上升，直至填充满整个页面，成为新页面的背景。&lt;/p&gt;
+
+&lt;h5 id=&quot;从-list-item-到-detail-page&quot;&gt;从 List Item 到 Detail Page&lt;/h5&gt;
+
+&lt;p&gt;当转换是从列表中的一项转化到详情页时，通常伴有共有内容的转移，有一点像 keynote 中的“神奇移动”，这一种做法非常棒。第一是当数据需要从远程获取时，预填充了一些已有的数据，减少用户的等待感；二是展示了前后页面的联系，给出了动效过程的逻辑。
+&lt;a href=&quot;/assets/A817D7AC3E18C159FA43BF33D2D9B7A4.mp4&quot;&gt;GoodTransition_Cohesive-v4.mp4&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;在官方文档中还指出，全屏扩展的内容，左上角应该是 x 而不是返回按钮：
+&lt;img src=&quot;/assets/19320BE52E3E69EFE5D47D5E88F9F600.png&quot; alt=&quot;19320BE52E3E69EFE5D47D5E88F9F600.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Material Design 对 页面父子关系的解释和 iOS 中的有明显不同。
+Material Design 中，父子的关系通过 z 轴高度展示，父的 z 轴高度比子的小。比如从 List Item 到 Detail Page 的转换可以看做是，当一个元素作为展示新页面的基础时，需要先提升自己的 z 轴高度，从 Parent 的高度提升至 Child View 的高度，再进行内容的展示。
+而在 iOS 中，他的基本界面首先是一个横向的思维导图，即左侧为 Parent，右侧为 Child，这构成了 iOS 自诞生以来的交互基础，只是 iOS 进一步给出 Z 轴上的层级，即页面右侧滑入的同时，处于上级高度。&lt;/p&gt;
+
+&lt;p&gt;（解释参考：https://zhuanlan.zhihu.com/p/19935140?columnSlug=majiphoto）&lt;/p&gt;
+
+&lt;h5 id=&quot;从-buttonicon-到-function-page&quot;&gt;从 Button/Icon 到 Function Page&lt;/h5&gt;
+&lt;p&gt;当页面是由按钮或图标触发的时候，新页面通常是一个功能性的页面，这个页面是怎么出现的，在 Material Design 的动效中也给出了解释。
+&lt;a href=&quot;/assets/7BE09C7B1415C86442D8EEF48CA71552.mp4&quot;&gt;components-buttons-fab-transition_fullscreen_02.mp4&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;sibling-to-sibling&quot;&gt;Sibling-to-sibling&lt;/h4&gt;
+&lt;p&gt;兄弟节点之间的跳转通常使用的是 Tab Navigator，当条目过多时，还可以使用可滚动的导航。
+&lt;a href=&quot;/assets/1477318463F7789BB0A67000AC1492EE.mp4&quot;&gt;components-tabs-typesoftabs_scrollable_tabs_01_xhdpi_003.mp4&lt;/a&gt;
+还有一个比较像的是 Bottom Navigation：
+&lt;a href=&quot;/assets/977E6424856276DC1B38E0E4C4CD6EA5.mp4&quot;&gt;components_bottomnavigation_behavior_crossfade.mp4&lt;/a&gt;
+这里要注意区分 Tab Navigator 与 Bottom Navigation 之间的区别：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Tab Navigator 的内容可以很多，多的时候可以选择可滚动的导航；而 Bottom Navigation 的导航个数是确定的，通常是3-4个，不可以滚动。&lt;/li&gt;
+  &lt;li&gt;Tab Navigator 所导航的内容切换时有左右滑动的动效，Bottom Navigator 没有。&lt;/li&gt;
+  &lt;li&gt;语义上来说，Tab Navigator 导航的通常是一种事务中的各种小类别，是有语义上的同级关系的；而 Bottom Navigation 作为应用级的导航，可能各项内容之间没有语义上的同级关系。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;inspirations&quot;&gt;Inspirations&lt;/h3&gt;
+&lt;hr /&gt;
+&lt;p&gt;看文档过程中，还有一些内容给我的印象很深。&lt;/p&gt;
+
+&lt;h4 id=&quot;fab&quot;&gt;FAB&lt;/h4&gt;
+&lt;p&gt;官方文档中对这个组件的说明：&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Shaped like a circled icon floating above the UI, it changes color upon focus and lifts upon selection. When pressed, it may contain more related actions.
+FAB 是浮在界面上方的原型的图标，它在获得焦点的时候会改变颜色，在被选择的时候会生气。当被按下的时候，它可能会包含多个相关的操作。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;它通常用在一个需要强调的功能上，一般是应用的基础功能。&lt;/p&gt;
+
+&lt;p&gt;我认为它给出了突出核心功能的一种解决方法。
+之前印象比较深的是新浪微博，它需要在浏览信息和发微博的功能中取得平衡。即一方面要让用户方便地浏览到自己想要看的信息，一方面又要给用户提供快捷的发微博的入口。更进一步的是，它还需要鼓励用户去发微博。最开始的时候，发微博的入口是在浏览微博界面的右上角，虽然取得了平衡，但是并没有突出微博这个应用的核心功能。后来的解决方案是改造了 Bottom Navigation，将带有 + 号的按钮放在中间。&lt;/p&gt;
+
+&lt;p&gt;两厢对比，FAB 提供了更多的使用场景，因为可能一个应用中好几个页面都有平衡浏览和功能的需求，这样微博的解决方案就不可以使用了。不过 FAB 可能会遮挡一些浏览的内容，也容易误操作，这是微博的解决方案相比之下比较好的地方。&lt;/p&gt;
+
+&lt;h4 id=&quot;alerts-的提示语句和两个选择的文本表达&quot;&gt;Alerts 的提示语句和两个选择的文本表达&lt;/h4&gt;
+&lt;p&gt;之前人机交互课程的时候，就讲过这个 Alert 的确定和取消按钮的摆放位置，实际上在要用户做选择的时候，需要注意的不仅是两个选择的位置，还有问问题的方式，以及修改 Confirm 和 Cancel 按钮的文字为更加有指向性的文本。
+问问题的时候应该尽量避免否定性的问题。比如说下图中的例子，在新建一个事件没有保存就要退出的时候，问 “Discard new event？”不如询问“Save new Event？”，除了减少用户思考的时间（牵扯到双重否定转肯定的问题）外，还有鼓励用户新建事件的意思在里面。
+&lt;img src=&quot;/assets/A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; alt=&quot;A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; /&gt;
+按钮的文字应当尽量说明操作会造成的后果，而不是简单的一律都是确定/取消。
+&lt;img src=&quot;/assets/B0DE8152CAC7FE7E2746D80C8BE9BEC2.png&quot; alt=&quot;屏幕快照 2017-05-25 上午9.41.44.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;说到按钮文字，想到了 PS 和 Sketch 中，新建文档进行操作，没有保存就退出时，两个软件给出的不同提示。
+&lt;img src=&quot;/assets/A7362A5F484352BAB379A94E1C5FF5D8.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.21.53.png&quot; /&gt;
+&lt;img src=&quot;/assets/FE421CCF6E076A84D235B2598BCB8F0B.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.20.49.png&quot; /&gt;
+对应位置上的按钮功能都是一样的，不过相比之下，Sketch 的 DELETE 文字，显然更能说明这个操作的后果是丢弃这个文件，而 PS 的“Dont’t save”则会让新手不晓得这个操作的后果是什么，也不能理解该选项和 cancel 之间有什么区别。&lt;/p&gt;
+
+&lt;p&gt;第一次写技术博客，尝试把自己的思路写下来，还是用了很多时间和努力，因为自己本身对这方面并没有很深的了解，写的东西也非常浅显。不过写的过程中在不断纠正提升自己的思路，感觉自己有了进步。&lt;/p&gt;</content><author><name></name></author><summary type="html">Material Design 中最让人眼前一亮的应该就是它推出的动效标准了，这次仔细地看完了 Material Design 的所有官方文档，对其中的动效做了探究。</summary></entry></feed>

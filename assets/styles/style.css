@@ -1,0 +1,262 @@
+@font-face { 
+  font-family: Bodoni;
+  src: url('./Bodoni 72 Smallcaps Book.ttf');
+}
+html{
+  font-size:62.5%;
+}
+body{
+  margin:0;
+  padding:0;
+  color:#444;
+  font-family: Bodoni;
+}
+p{
+  margin:0;
+}
+a{
+  color:#444;
+  text-decoration: none;
+}
+.background{
+  position: fixed;
+  top: -40vh;
+  left:0;
+  width: 100vw;
+  height:100vh;
+  background: url('../dabir-bernard-59001.jpg') no-repeat;
+  background-size: cover;
+  z-index: -1;
+}
+.header{
+  position: absolute;
+  top:0;
+  padding:8vh 10vw;
+  width:100%;
+  height:30vh;
+  box-sizing: border-box;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  background:white;
+}
+.title{
+  color:#CDA736;
+  font-size: 4.6rem;
+  line-height: 3.6rem;
+  /* text-decoration: underline; */
+  /* border-bottom:4px #CDA736 double; */
+}
+.header .border{
+  margin: 1px 0 0 0;
+  border: none;
+  width: 100%;
+  height: 2px;
+  border-bottom: 2px #CDA736 solid;
+}
+img.title{
+  height: 4rem;
+}
+ul.nav{
+  margin: 2rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  font-size:1.4rem;
+}
+ul.nav li{
+  margin-right: 3rem;  
+  cursor: pointer;
+}
+ul.nav li:hover{
+  text-decoration: underline;
+}
+.main{
+  position: absolute;
+  top: 60vh;
+  width: 100vw;
+  min-height: 40vh;
+  padding: 8vh 10vw;
+  box-sizing: border-box;
+  background: #eee;
+}
+.slogan,.author{
+  font-size:1.2rem;
+  position: absolute;
+  bottom:2vh;
+}
+.slogan{
+  margin:0.5rem 0;
+  font-size:1.8rem;
+}
+.author{
+  right:10vw;
+}
+.footer{
+  position: absolute;
+  bottom: 2vh;
+  width: 100%;
+}
+
+.post_block{
+  padding:4rem;
+  width:100%;
+  box-sizing: border-box;
+  margin-bottom:6rem;
+  background: white;
+}
+.post_block .title{
+  font-size:1.8rem;
+  color:#CDA736;
+  text-decoration: none;
+  border-bottom:1px #CDA736 solid;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial,
+  "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN",
+  "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
+  "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+.post_block .time{
+  float:right;
+  font-size:1.4rem;
+}
+.post_block .excerpt{
+  margin-top:3rem;
+  font-size:1.2rem;
+  color:#888;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial,
+  "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN",
+  "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
+  "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+.post_block .more{
+  display: block;
+  margin-top: 3rem;
+  font-size: 1.2rem;
+}
+.post_block:hover .more{
+  text-decoration: underline;
+}
+
+.friends{
+  width: 100%;
+  margin-bottom:20vh;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.friend{
+  margin-bottom:5rem;
+  padding:4rem;
+  width:30%;
+  box-sizing: border-box;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+}
+.friend .avatar{
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+}
+.friend .info{
+  margin:0 18% 0 5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+}
+.friend .name{
+  font-size:2rem;
+  color:#CDA736;
+  /* text-decoration: underline; */
+  border-bottom: 1px #CDA736 solid;
+}
+.friend .link{
+  margin: 0.5rem 0 1rem 0;;
+  font-size: 1.2rem;
+  color: #888;
+  /* text-decoration: underline; */
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial,
+  "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN",
+  "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
+  "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+
+.about{
+  width:100%;
+  padding:8rem 10rem;
+  margin-bottom:20vh;
+  box-sizing: border-box;
+  background: white;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial,
+  "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN",
+  "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
+  "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+.about .avatar{
+  width:25rem;
+  height:25rem;
+  background: url('../avatar/christine.jpg');
+  background-size:cover;
+}
+.about .info{
+  margin-right:20rem;
+  /* margin-left:8rem; */
+  height:25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.about .name{
+  font-size:2rem;
+  font-family: Bodoni;
+  color:#CDA736;
+  border-bottom:1px #CDA736 solid;
+}
+.about .description{
+  margin-top:1rem;
+}
+.about .desc{
+  margin-bottom:0.2rem;
+  font-size:1.2rem;
+  color:#444;
+}
+.about .icons img{
+  margin-bottom: -0.5rem;
+  margin-right:2rem;
+  width:1.6rem;
+  cursor: pointer;
+}
+
+.article{
+  margin-bottom:10vh;
+  width:100%;
+  padding:5rem 8rem;
+  box-sizing: border-box;
+  background: white;
+  color:#666;
+  font-size:1.4rem;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial,
+  "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN",
+  "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
+  "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+.article .title{
+  font-size:2rem;
+  line-height:2rem;
+  border-bottom: 1px #CDA736 solid;
+}
+.article .time{
+  margin:4rem 0 4rem 0;
+  color:#888;
+}
+.article img{
+  max-width: 100%;
+}

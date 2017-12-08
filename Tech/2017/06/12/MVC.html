@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Autumn </title>
+    <link rel="stylesheet" href="/assets/styles/style.css">
+    
+</head>
+<body>
+    <div class="background"></div>
+    <div class="header">
+        <div class="title">
+            Autumn
+            <hr class="border"/>
+            <hr class="border"/>
+        </div>
+        <ul class="nav">
+            <li><a href="/">SRC</a></li>
+            <li><a href="/LIFE">LIFE</a></li>
+            <li><a href="/Tech">TECH</a></li>
+            <li><a href="/FRIENDS">FRIENDS</a></li>
+            <li><a href="/ABOUT">ABOUT</a></li>
+        </ul>
+    </div>
+    
+    
+    <div class="main">
+        <div class="article">
+    <span class="title"> Web 框架中对于 MVC 架构的优化策略 </span>
+    <p class="time"> 12 June 2017&nbsp;&nbsp;—&nbsp;&nbsp;Tech</p>
+    <p>MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。
+MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。</p>
+
+<p>在 web2.0 兴起后，网页应用不满足于单纯的静态数据展示，需要根据用户的行为展示不同的信息，之前的服务器端直接返回静态页面的交互方式已经不适用。MVC 架构模式的特性使得它也可以很好的支持 web 开发，因此很多语言也为使用 MVC 架构构建 web 应用提供了解决方案 —— 提供模板引擎，比如 Python 的 Django。这种开发技术的主要思想便是使用模板引擎作为 view，根据 Controller 传入的 Model 渲染出对应的 HTML 页面传回客户端浏览器。</p>
+
+<p>不过随着计算机的快速发展、移动端的爆炸式普及，由服务器端渲染页面传回客户端的解决方案已经难以适用于一部分场景：</p>
+
+<ol>
+  <li>同一个应用需要跨平台（web 端、PC 端、移动端）并且需要与后台交互的时候，服务器端对 web 的支持如果只停留在使用模板引擎渲染页面返回上，则需要另外再对移动端和 PC 端设计接口并实现，这样做会增加代码的冗余并且使得项目难以维护。</li>
+  <li>虽然大多模板引擎支持组件的拆分组合，使得部分前端代码可以复用，但是这种复用实现不灵活。一是在渲染网页的时候，是基于页面的，所以这样的拆分基本只是页面+页面的部分，简单来说只有嵌套只有两层；二是在做页面的部分刷新（而非整页刷新）的时候，通常的做法是需要服务器端传回一段代码再插入页面中，这样的交互显然比较低效。</li>
+</ol>
+
+<p>从多个角度看来，在一些应用场景中，传统的 web 架构需要进行修改和变革，特别是在前后端的交互方式上。</p>
+
+<p>目前的解决方案便是前后端分离 —— 服务器端并不需要知道页面长什么样，即并不需要有 View 的部分，它只需要给客户端提供它所需要的数据即 Model 即可。而如何响应用户的操作、什么情况下需要什么样的数据，则由客户端独立完成。</p>
+
+<p>这样的方案增加了传统的 View 层的复杂度，也带来了负责的客户端如何组织的新问题，一些基于 JS 的前端框架应运而生。这些前端框架需要解决的是数据和组件之间的关系，大多运用了优化后的 MVC 架构模式 —— 优化主要是针对 Controller 部分的。</p>
+
+<h3 id="angular--mvvm">Angular —— MVVM</h3>
+
+<p>MVVM 是 Model-View-ViewModel 的缩写，源于 MVP 架构，它的主要思想是为 View 单独构建一个特殊的 Model 即 ViewModel。
+下图展示了 MVC、MVP 和 MVVM 之间的联系和区别。
+<img src="/assets/12969C82C646C4E85D99C12BF2438EA9.png" alt="MVVM-comparson.png" />
+MVP 对 MVC 的改进是切断了 View 和 Model 之间的直接联系，将 Controller 变为 Presenter，直接改变 View。三个部分之间的两两单向循环数据流变成了双向的数据流。
+个人理解是，这样的优化使得模块之间的关系更加简单，对于 View 和 Model  来说，改变的来源和得到用户交互后需要通知的组件变为了同一个。
+MVVM 乍看和 MVP 一样（确实也没多大差别），不过他们最重要的区别在于 View 和 Controller（简化称呼，即 MVP 里的 Presenter 和 MVVM 里的 ViewModel）之间的交互方式。下面是某篇博文里的说明：</p>
+<blockquote>
+  <p>For instance if View had a property IsChecked and Presenter was setting it in classic MVP, in MVVM ViewModel will have that IsChecked Property which View will sync up with.
+举例来说，如果 View 有一个是否被选择的属性，经典 MVP 中 Presenter 会设置 View 中的这个属性，而 MVVM 中，ViewModel 会拥有这个属性，并且 View 会随时随着这个属性的值进行变化。&gt;</p>
+</blockquote>
+
+<p>个人理解是，两个架构的区别在于是否需要在代码里明确写出对 view 状态的改变。
+使用 MVVM 架构的典型框架是 Angular。</p>
+
+<h3 id="redux--action--reducer--controller">Redux —— Action + Reducer = Controller</h3>
+<p>这一种架构思想化，是我在学习 React &amp; Redux 的时候了解到的。React 作为轻量级前端框架，处理的是 viewshuj 层相关内容，Redux 则处理数据。因为 Redux 处理数据流的思路包含很多关于函数式编程的思想，所以它是不是对 MVC 架构的一种演变，也不能完全确定，目前为止这个架构也没有特定的名字。
+但是由于我在使用过程中得到了很大的启发，甚至可以说是被惊艳到了，以及阿里针对 React &amp; Redux 开发的轻量级框架 dva 中，为了简化理解，封装出了一个 Model 的概念，我们暂且就不管一些定义上的问题，将关注点放在优秀的架构思想本身上吧！
+Redux 中非常重要的三个概念是 Store、Action 和 Reducer。</p>
+
+<h4 id="store">Store</h4>
+<p>Store 是一个树状的、存储全局状态的纯数据结构体，在 JS 中就是一个 JSON 格式的数据对象。</p>
+
+<pre><code class="language-js">// 这是一个简易的 TODO 应用的 Store 设计
+{
+  visibilityFilter: 'SHOW_ALL',
+  todos: [
+    {
+      text: 'Consider using Redux',
+      completed: true,
+    },
+    {
+      text: 'Keep all state in a single tree',
+      completed: false
+    }
+  ]
+}
+</code></pre>
+
+<h4 id="action">Action</h4>
+<p>Action 负责描述 Store 需要作出怎样的改变，通常含有一个 type （指明 Action 的类型以及要被哪个函数接受处理），和具体的需要传输的数据。</p>
+
+<pre><code class="language-js">// Action 一般会通过 dispatch 函数被传递给相应的处理函数。
+// 在下面的代码中，大括号内的便是一个 Action
+// type 描述了这是一个添加 TODO 项的行为
+// payload 中含有添加的 TODO 项的内容
+
+dispatch({
+  type:ADD_TODO,
+  payload:{
+    text:'finish homework',
+  }
+})
+</code></pre>
+
+<h4 id="reducer">Reducer</h4>
+<p>Reducer 是纯函数，它的作用是接收 Action，并且根据旧的 Store 和 接收到的Action 产生新的 Store。
+这一过程可以被描述为 preStore + Action = newStore。</p>
+
+<pre><code class="language-js">// 下面的代码是一个 Reducer 函数，它展现了上面的 ADD_TODO Action 将会如何被处理
+// 首先该函数接受的参数由两个，当前的 Store，以及需要处理的 Action
+// 通过对 Action 中的 type 进行筛选对比，将 Action 传给响应的函数处理，这里只展示了 ADD_TODO 的处理函数
+// ADD_TODO 中的函数作用便是通过原有的 Store 和需要增加的 TODO 事件内容，生成新的 Store 并返回
+function todoApp(state = initialState, action) {
+  switch (action.type) {
+    case ADD_TODO:
+      return Object.assign({}, state, {
+        todos: [
+          ...state.todos,
+          {
+            text: action.text,
+            completed: false
+          }
+        ]
+      })
+    case TOGGLE_TODO:
+      return ...
+    default:
+      return state
+  }
+</code></pre>
+
+<p>简单来说，Redux 将传统 MVC 架构中的 Controller 分为了 Action 和 Reducer 两个部分，前者描述要做出什么样的改变，后者实现改变。
+Redux 和 React 配合使用时，React 负责 view 的部分，view 根据 Store 内容做出相应的展示，接受到用户操作时，通过发出 Action 来实现和用户的交互。各部分之间的关系如下：
+<img src="/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg" alt="Relation" /></p>
+
+<p>除此之外，需要关注的是当应用复杂时，我们应该拆分 Reducer，即使用更多的 Reducer 来处理 Action，而不是创建更多的 Store。在 Redux 中，Store 始终是单一的。这一点和另外一种架构前端处理数据的框架 Flux 有很大的区别，Flux 的做法是使用多个 store，但是使用单一的 dispatcher 来分发处理 Action，对比图如下。
+左边是 Flux，右边是 Redux。
+<img src="/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png" alt="ReduxFlux.png" />
+对比之下会发现在这一点上 Redux 对 Flux 的改进简直是非常天才的。
+单一的 Store 减少了 Java 的仪式感：单一的树状状态数据可以用最简洁的方式存储全局的数据，不同组件用相同数据时，只要拿相同的部分就可以了。而传统的 Java 服务端中，是用多个 Model 存储不同的数据，对于以界面展示为重要功能的前端中，这样的方式显得非常冗余。
+多个 Reducer 处理解决了单一 dispatcher 会有性能瓶颈的问题。
+而单一的数据源，映射到不同的组件中，各组件根据用户的操作会发出 Action，最终会产生新的 Store 树。这样的先映射再分别处理的方法，让人联想到数据处理中的 Map-Reduce 架构模式，从数据流角度来看 Redux，则有新的体会了。</p>
+
+</div>
+        <span class="slogan">winter is coming.</span>        
+        <span class="author">© CHRISTINE Z</span>
+    </div>
+    
+</body>
+</html>
