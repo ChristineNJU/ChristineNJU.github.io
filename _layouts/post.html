@@ -1,0 +1,8 @@
+---
+layout: default
+---
+<div class="article">
+    <span class="title"> {{ page.title }} </span>
+    <p class="time"> {{ page.date | date_to_long_string}}&nbsp;&nbsp;—&nbsp;&nbsp;{{ page.categories }}</p>
+    {{ content }}
+</div>

@@ -1,0 +1,21 @@
+---
+layout: default
+title: Tech
+permalink: /Tech/
+---
+{% for post in site.categories.Tech %}
+<a href="{{ post.url }}">
+  <div class="post_block">
+    <div class="row">
+      <span class="title" href="{{ post.url }}">{{ post.title }}</span>
+      <span class="time">{{ post.time }}</span>
+    </div>
+    {% if post.content contains '<!-- excerpt -->' %}
+    <div class="excerpt">{{ post.content | split: '<!-- excerpt -->'  | first  }}</div>
+    {% else %}
+    <div class="excerpt">{{ post.excerpt | strip_html }}</div>
+    {% endif %}
+    <span class="more" href="{{ post.url }}"> MORE >> </span>
+  </div>
+</a>
+{% endfor %}

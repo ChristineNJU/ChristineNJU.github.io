@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Autumn </title>
-    <link rel="stylesheet" href="/assets/styles/style.css">
+    <title>Autumn {{ title }}</title>
+    <link rel="stylesheet" href="{{ site.url }}/assets/styles/style.css">
     
 </head>
 <body>
@@ -23,23 +23,18 @@
         </ul>
     </div>
     
-    
-    <div class="main">
-        <div class="article">
-    <span class="title"> Start of the rest </span>
-    <p class="time"> 06 December 2017&nbsp;&nbsp;—&nbsp;&nbsp;life</p>
-    <h2 id="a-new-blog">a new blog</h2>
-
-<p>testtest 看一下中文的显示</p>
-
-<!-- excerpt -->
-
-<h2 id="ye">ye</h2>
-
-</div>
+    {% if page.isIndex %}
+    <div class="main" style="background:white">
+        {{ content }}
         <span class="slogan">winter is coming.</span>        
         <span class="author">© CHRISTINE Z</span>
     </div>
-    
+    {% else %}
+    <div class="main">
+        {{ content }}
+        <span class="slogan">winter is coming.</span>        
+        <span class="author">© CHRISTINE Z</span>
+    </div>
+    {% endif %}
 </body>
 </html>
