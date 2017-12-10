@@ -6,8 +6,9 @@ permalink: /FRIENDS/
 <div class="friends">
   {% for friend in site.data.friends %}
   <a class="friend" href="http://{{friend.url}}" target="blank">
-    <div class="avatar" style="background: url('{{ site.url }}/assets/avatar/{{ friend.avatar }}');background-size:cover;">
-    </div>
+    <!--<div class="avatar" style="background: url('{{ site.url }}/assets/avatar/{{ friend.avatar }}');background-size:cover;">-->
+    <img class="avatar" src="{{ site.url }}/assets/avatar/{{ friend.avatar }}">
+    </img>
     <div class="info">
       <span class="name">{{ friend.name }}</span>
       <p class="link">{{ friend.site }}</p>

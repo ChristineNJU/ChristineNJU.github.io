@@ -200,13 +200,15 @@ ul.nav li:hover{
   "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
 }
 .about .avatar{
+  margin-right:1rem;
   width:25rem;
   height:25rem;
   background: url('../avatar/christine.jpg');
   background-size:cover;
 }
 .about .info{
-  margin-right:20rem;
+  /*margin-left:10%;*/
+  margin-right:5%;
   /* margin-left:8rem; */
   height:25rem;
   display: flex;
