@@ -248,6 +248,9 @@ ul.nav li:hover{
   "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei",
   "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
 }
+.article p{
+  margin: 0 0 1rem 0;
+}
 .article .title{
   font-size:2rem;
   line-height:2rem;

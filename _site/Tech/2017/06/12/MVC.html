@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Autumn </title>
-    <link rel="stylesheet" href="/assets/styles/style.css">
+    <link rel="stylesheet" href="http://localhost:4000/assets/styles/style.css">
     
 </head>
 <body>
@@ -50,7 +50,7 @@ MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模
 
 <p>MVVM 是 Model-View-ViewModel 的缩写，源于 MVP 架构，它的主要思想是为 View 单独构建一个特殊的 Model 即 ViewModel。
 下图展示了 MVC、MVP 和 MVVM 之间的联系和区别。
-<img src="/assets/12969C82C646C4E85D99C12BF2438EA9.png" alt="MVVM-comparson.png" />
+<img src="http://localhost:4000/assets/12969C82C646C4E85D99C12BF2438EA9.png" alt="MVVM-comparson.png" />
 MVP 对 MVC 的改进是切断了 View 和 Model 之间的直接联系，将 Controller 变为 Presenter，直接改变 View。三个部分之间的两两单向循环数据流变成了双向的数据流。
 个人理解是，这样的优化使得模块之间的关系更加简单，对于 View 和 Model  来说，改变的来源和得到用户交互后需要通知的组件变为了同一个。
 MVVM 乍看和 MVP 一样（确实也没多大差别），不过他们最重要的区别在于 View 和 Controller（简化称呼，即 MVP 里的 Presenter 和 MVVM 里的 ViewModel）之间的交互方式。下面是某篇博文里的说明：</p>
@@ -131,11 +131,11 @@ function todoApp(state = initialState, action) {
 
 <p>简单来说，Redux 将传统 MVC 架构中的 Controller 分为了 Action 和 Reducer 两个部分，前者描述要做出什么样的改变，后者实现改变。
 Redux 和 React 配合使用时，React 负责 view 的部分，view 根据 Store 内容做出相应的展示，接受到用户操作时，通过发出 Action 来实现和用户的交互。各部分之间的关系如下：
-<img src="/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg" alt="Relation" /></p>
+<img src="http://localhost:4000/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg" alt="Relation" /></p>
 
 <p>除此之外，需要关注的是当应用复杂时，我们应该拆分 Reducer，即使用更多的 Reducer 来处理 Action，而不是创建更多的 Store。在 Redux 中，Store 始终是单一的。这一点和另外一种架构前端处理数据的框架 Flux 有很大的区别，Flux 的做法是使用多个 store，但是使用单一的 dispatcher 来分发处理 Action，对比图如下。
 左边是 Flux，右边是 Redux。
-<img src="/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png" alt="ReduxFlux.png" />
+<img src="http://localhost:4000/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png" alt="ReduxFlux.png" />
 对比之下会发现在这一点上 Redux 对 Flux 的改进简直是非常天才的。
 单一的 Store 减少了 Java 的仪式感：单一的树状状态数据可以用最简洁的方式存储全局的数据，不同组件用相同数据时，只要拿相同的部分就可以了。而传统的 Java 服务端中，是用多个 Model 存储不同的数据，对于以界面展示为重要功能的前端中，这样的方式显得非常冗余。
 多个 Reducer 处理解决了单一 dispatcher 会有性能瓶颈的问题。

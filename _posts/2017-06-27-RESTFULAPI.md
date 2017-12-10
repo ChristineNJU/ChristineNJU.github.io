@@ -1,7 +1,6 @@
 ---
 layout: post
 title:  "REST API  学习笔记"
-time:   27 june 2017
 categories: Tech
 url: "/REST"
 ---

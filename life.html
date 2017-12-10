@@ -8,7 +8,7 @@ permalink: /LIFE/
   <div class="post_block">
     <div class="row">
       <span class="title" href="{{ post.url }}">{{ post.title }}</span>
-      <span class="time">{{ post.time }}</span>
+      <span class="time">{{ post.date | date_to_string }}</span>
     </div>
     {% if post.content contains '<!-- excerpt -->' %}
     <div class="excerpt">{{ post.content | split: '<!-- excerpt -->'  | first  }}</div>
