@@ -1,5 +1,582 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.3.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2018-03-27T17:00:08+08:00</updated><id>/</id><title type="html">Autumn</title><subtitle>Christine's blog
-</subtitle><entry><title type="html">Start of the rest</title><link href="/life/2017/12/10/start.html" rel="alternate" type="text/html" title="Start of the rest" /><published>2017-12-10T00:00:00+08:00</published><updated>2017-12-10T00:00:00+08:00</updated><id>/life/2017/12/10/start</id><content type="html" xml:base="/life/2017/12/10/start.html">&lt;p&gt;个站拖了两年，在换了好几个设计稿之后，终于搭好了。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.3.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-01-20T11:17:23+08:00</updated><id>http://localhost:4000/</id><title type="html">Autumn</title><subtitle>Christine's blog
+</subtitle><entry><title type="html">RxJS 学习笔记</title><link href="http://localhost:4000/tech/2020/01/20/RxJS.html" rel="alternate" type="text/html" title="RxJS 学习笔记" /><published>2020-01-20T00:00:00+08:00</published><updated>2020-01-20T00:00:00+08:00</updated><id>http://localhost:4000/tech/2020/01/20/RxJS</id><content type="html" xml:base="http://localhost:4000/tech/2020/01/20/RxJS.html">&lt;p&gt;在字节跳动新社区 EX 前端组实习期间的产物，主要是介绍一下如何入门比较好以及 RxJS 和 React Hooks 的结合使用。&lt;/p&gt;
+
+&lt;h1 id=&quot;建议学习顺序&quot;&gt;建议学习顺序&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;官网 overview&lt;/li&gt;
+  &lt;li&gt;自己写经典场景的代码&lt;/li&gt;
+  &lt;li&gt;对比一下别人的实现&lt;/li&gt;
+  &lt;li&gt;看看 operators&lt;/li&gt;
+  &lt;li&gt;有兴趣看看源码啥的？&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;整体概念&quot;&gt;整体概念&lt;/h1&gt;
+
+&lt;h2 id=&quot;基本概念&quot;&gt;基本概念&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Observable:
+    &lt;ul&gt;
+      &lt;li&gt;represents the idea of an invokable collection of future values or events.&lt;/li&gt;
+      &lt;li&gt;未来的一系列可调用值或事件&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Observer:
+    &lt;ul&gt;
+      &lt;li&gt;is a collection of callbacks that knows how to listen to values delivered by the Observable.&lt;/li&gt;
+      &lt;li&gt;知晓如何监听 Observable 发出的值的回调函数&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Subscription:
+    &lt;ul&gt;
+      &lt;li&gt;represents the execution of an Observable, is primarily useful for cancelling the execution.&lt;/li&gt;
+      &lt;li&gt;是 Observer 和 Observable 之间的关系，subscribe 之后，Observable 才会执行。一般用来取消&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Operators:
+    &lt;ul&gt;
+      &lt;li&gt;are pure functions that enable a functional programming style of dealing with collections with operations like map, filter, concat, reduce, etc.&lt;/li&gt;
+      &lt;li&gt;对 Input Observable 发出的值做处理，发出 Output Observable&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Subject:
+    &lt;ul&gt;
+      &lt;li&gt;is the equivalent to an EventEmitter, and the only way of multicasting a value or event to multiple Observers.&lt;/li&gt;
+      &lt;li&gt;观察者模式 -&amp;gt; 发布订阅模式&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Schedulers:
+    &lt;ul&gt;
+      &lt;li&gt;are centralized dispatchers to control concurrency, allowing us to coordinate when computation happens on e.g. setTimeout or requestAnimationFrame or others.&lt;/li&gt;
+      &lt;li&gt;控制并发性，协调 setTimeout 或 requestAnimationFrame&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;宝石图&quot;&gt;宝石图&lt;/h2&gt;
+
+&lt;h1 id=&quot;multicasted-observables--reference-counting&quot;&gt;Multicasted Observables &amp;amp; Reference counting&lt;/h1&gt;
+
+&lt;p&gt;Observable 可通过 Subject 向多个 subscribers（监听器）发送消息，这成为 multicasted（多播）Observable，但是 unicast（单播的） Observable，即普通的 Observable 只有一个 Observer。
+注意：这里的【一个 】Observer 意思在于，同一个 Observable 被两次 subscribe，第二次监听的是一个用同样方法构建出来的新的 Observer。比如对
+fromEvent(document, ‘click’).pipe(mapTo(1),scan((acc, one) =&amp;gt; acc + one, 0)) subscribe 两次，两次的计数是独立的。&lt;/p&gt;
+
+&lt;p&gt;multicast returns an Observable that looks like a normal Observable, but works like a Subject when it comes to subscribing. multicast returns a ConnectableObservable, which is simply an Observable with the connect() method.&lt;/p&gt;
+
+&lt;p&gt;The connect() method is important to determine exactly when the shared Observable execution will start. Because connect() does source.subscribe(subject) under the hood, connect() returns a Subscription, which you can unsubscribe from in order to cancel the shared Observable execution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;import { from, Subject } from &quot;rxjs&quot;;
+import { multicast } from &quot;rxjs/operators&quot;;
+const source = from([1, 2, 3]);
+const subject = new Subject();
+const multicasted = source.pipe(multicast(subject));
+
+// These are, under the hood, `subject.subscribe({...})`:
+multicasted.subscribe({
+  next: v =&amp;gt; console.log(`observerA: ${v}`)
+});
+multicasted.subscribe({
+  next: v =&amp;gt; console.log(`observerB: ${v}`)
+});
+
+// This is, under the hood, `source.subscribe(subject)`:
+multicasted.connect();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但是在 subscribe 之后显式调用 connect 有点弱智，所以就有了 refCount，监听器数量从 0 到 1，自动 connect，变为 0 时完全 unsubscribe。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;const source = interval(500);
+const subject = new Subject();
+const refCounted = source.pipe(multicast(subject), refCount());
+let subscription1, subscription2;
+
+// This calls `connect()`, because
+// it is the first subscriber to `refCounted`
+console.log(&quot;observerA subscribed&quot;);
+subscription1 = refCounted.subscribe({
+  next: v =&amp;gt; console.log(`observerA: ${v}`)
+});
+
+// This is when the shared Observable execution will stop, because
+// `refCounted` would have no more subscribers after this
+setTimeout(() =&amp;gt; {
+  console.log(&quot;observerA unsubscribed&quot;);
+  subscription1.unsubscribe();
+}, 2000);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&quot;subject&quot;&gt;Subject&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;BehaviorSubject
+有监听器加入时，先发送当前值&lt;/li&gt;
+  &lt;li&gt;ReplaySubject
+会记录多个值，并且在有新监听器加入时，把最近的 n 个值（可配置）一起发送过去。&lt;/li&gt;
+  &lt;li&gt;AsyncSubject
+只在 complete 的时候，发送最近一次的值&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;operators-总结&quot;&gt;Operators 总结&lt;/h1&gt;
+
+&lt;h2 id=&quot;触发条件控制&quot;&gt;触发条件控制&lt;/h2&gt;
+
+&lt;h3 id=&quot;用-observable-做条件限制&quot;&gt;用 Observable 做条件限制&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;audit：给定 Observable 触发，才会把 source 的值传出来&lt;/li&gt;
+  &lt;li&gt;debounce：防抖，一般传 ( ) =&amp;gt; interval，如果在给定时间内，source 没有新事件，则将之前的值传出，否则丢弃并重新计时&lt;/li&gt;
+  &lt;li&gt;delayWhen：一般传 ( ) =&amp;gt; interval， source 的每一个值的延迟，都满足给定 Observable 的条件。
+    &lt;ul&gt;
+      &lt;li&gt;比如 source 是 of(1,2,3)；但是给定 Observable 是 (num) =&amp;gt; interval((4-num)*1000)，则 1 会在 3 秒后发出，3 会在 1 秒或发出&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Sample：给定 Observable 触发，如果距上一次触发，source 有新值，则发送最新值（在此期间内的旧的忽略），没有则不传&lt;/li&gt;
+  &lt;li&gt;throttle：节流，一般传 () =&amp;gt; interval，在给定时间内的新事件会被忽略&lt;/li&gt;
+  &lt;li&gt;observeOn：在监听事件发生时才触发，比如 observeOn(animationFrameScheduler) 可以做渲染优化&lt;/li&gt;
+  &lt;li&gt;skipUntil：直到传入的 Observable 触发时，source 的值才会被发送&lt;/li&gt;
+  &lt;li&gt;takeUntil：传入的 Observable 触发后，source complete&lt;/li&gt;
+  &lt;li&gt;timeoutWith：(time, Observable)，指定时间内 source 没有发出值，则 subscribe 给定 Observable&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;用值做条件限制&quot;&gt;用值做条件限制&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;auditTime：每隔多长时间发一次 source Observable 的最新值&lt;/li&gt;
+  &lt;li&gt;debounceTime：防抖&lt;/li&gt;
+  &lt;li&gt;delay：source 值发送延迟 xx 时间，还可以传 Date，Observable 在此日期后才有效&lt;/li&gt;
+  &lt;li&gt;distinctUntilChanged：邻位去重，即如果当前 source 值与上一次一样，忽略此次&lt;/li&gt;
+  &lt;li&gt;distinctUntilKeyChanged：邻位去重，即如果当前 source 值与上一次的值，键为 key 的值一样，忽略&lt;/li&gt;
+  &lt;li&gt;filter：source 值传入，返回为 true 才触发&lt;/li&gt;
+  &lt;li&gt;sampleTime：给定时间内，如果 source 有新值，则发送最新值（在此期间内的旧的忽略），没有则不发送&lt;/li&gt;
+  &lt;li&gt;throttleTime：（duration, scheduler, config: { leading, trailing }）
+    &lt;ul&gt;
+      &lt;li&gt;节流，可以做双击的判断 throttleTime(400, asyncScheduler,{ leading: false, trailing: true })&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;subscribeOn：返回按照指定的 ScheduleLike 监听 source 的 Observable&lt;/li&gt;
+  &lt;li&gt;skip：source 的前几个值会被忽略&lt;/li&gt;
+  &lt;li&gt;skipLast：source complete 之前的几个值会被忽略&lt;/li&gt;
+  &lt;li&gt;skipWhile：传入的函数返回值为 true 时，source 的值都会被忽略&lt;/li&gt;
+  &lt;li&gt;take：返回 source 发出的前 n 个值，并 complete&lt;/li&gt;
+  &lt;li&gt;takeLast：返回 source complete 前几个值，并 complete&lt;/li&gt;
+  &lt;li&gt;takeWhite：传入的函数返回值为 true 时，source 的值都会被发出&lt;/li&gt;
+  &lt;li&gt;timeout：指定时间内，source 没有发出值则直接 error
+一个转多个&lt;/li&gt;
+  &lt;li&gt;window：将 source 分为多个 Observable，分隔点为传入的 Observable 触发时&lt;/li&gt;
+  &lt;li&gt;windowCount：(windowSize, startWindowEvery) 将 source 分为多个 Observable，每 n 个值为一个&lt;/li&gt;
+  &lt;li&gt;windowTime：将 source 分为多个 Observable，每 time 时间分一次&lt;/li&gt;
+  &lt;li&gt;windowToggle：(openings, closingSelector) 将 source 分为多个 Observable，每 openings 和 closingSelector 对应的事件发生之间的值分为一个&lt;/li&gt;
+  &lt;li&gt;windowWhen：将 source 分为多个 Observable，closingSelector 每俩值之间的分为一个&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;多个转一个&quot;&gt;多个转一个&lt;/h2&gt;
+
+&lt;h3 id=&quot;高阶-observable-处理&quot;&gt;高阶 Observable 处理&lt;/h3&gt;
+
+&lt;p&gt;《高阶 Observable》是指返回值为 Observable 的 Observable（参考高阶函数），比如 fromEvent(‘click’).map(() =&amp;gt; interval(1000)) 的意思就是每一次 click 都会创建一个 interval Observable，则一个点击监听的 Observable 会发送多个 interval Observable。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;combineAll：多个高阶 Observable，有任意 next 时，并且此时所有都发送过值时，发送 Array 类型的组合值&lt;/li&gt;
+  &lt;li&gt;concatAll：多个高阶 Observable，前一个 complete 之后，才会处理下一个 的 next&lt;/li&gt;
+  &lt;li&gt;mergeAll：多个高阶 Observable，任一 next 时，发送其值&lt;/li&gt;
+  &lt;li&gt;switchAll：多个高阶 Observable，后一个第一次 next 时，前一个的值就不管了&lt;/li&gt;
+  &lt;li&gt;zipAll：&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;多个-observable-处理&quot;&gt;多个 Observable 处理&lt;/h3&gt;
+
+&lt;p&gt;对多个 Observable 进行统一处理的函数，不是 operators。这里因为跟上下文有关联所以放一起&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;combineLatest：多个 Observable，任意 next，并且此时所有 observable 都发送过值时，发送 Array 类型的组合值&lt;/li&gt;
+  &lt;li&gt;concat：多个 Observable，前一个 complete 后，处理下一个 next 值&lt;/li&gt;
+  &lt;li&gt;exhaust：前一个 Observable 还未 complete 时，后一个 Observable 被丢弃&lt;/li&gt;
+  &lt;li&gt;merge：多个 Observable，任意 next 时，发送值&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;observable-转换-xxxmap&quot;&gt;Observable 转换: xxxMap&lt;/h3&gt;
+
+&lt;p&gt;这类 operators 处理的问题是将多个 Observable 合并成一个，规则如下&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;concatMap：前一个 complete 再处理下一个&lt;/li&gt;
+  &lt;li&gt;exhaustMap：前一个未 complete 时，丢弃下一个。&lt;/li&gt;
+  &lt;li&gt;flatMap：同 mergeMap&lt;/li&gt;
+  &lt;li&gt;mergeMap：按所有 Observable next 发送的顺序，发出值&lt;/li&gt;
+  &lt;li&gt;switchMap：永远发出最新被创建的 Observable 的值&lt;/li&gt;
+  &lt;li&gt;expand：用前一个 Observable 的值递归构造新 Observable，最后 merge 成一个，用返回 Empty 或者 take/takeUntil 停止&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;xxxmapto&quot;&gt;xxxMapTo&lt;/h3&gt;
+
+&lt;p&gt;这类 operators 处理的问题是将多个 Observable 合并成一个，与上面不同的是，传参是个固定值，&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;concatMapTo&lt;/li&gt;
+  &lt;li&gt;mergeMapTo&lt;/li&gt;
+  &lt;li&gt;switchMapTo&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;上述多类函数的比较&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;// concat
+const timer1 = interval(1000).pipe(take(10));
+const timer2 = interval(2000).pipe(take(6));
+const timer3 = interval(500).pipe(take(10));
+const result = concat(timer1, timer2, timer3);
+
+// concatAll
+const clicks = fromEvent(document, 'click');
+const higherOrder = clicks.pipe(
+  map(ev =&amp;gt; interval(1000).pipe(take(4))),
+);
+## 这边如果直接 subscribe(highOrder)，得到的就是 Interval Observable
+const firstOrder = higherOrder.pipe(concatAll());
+
+// concatMap
+const clicks = fromEvent(document, 'click');
+const result = clicks.pipe(
+  concatMap(ev =&amp;gt; interval(1000).pipe(take(4)))
+);
+
+// concatMapTo
+const clicks = fromEvent(document, 'click');
+const result = clicks.pipe(
+  concatMapTo(interval(1000).pipe(take(4))),
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;observable-值处理&quot;&gt;Observable 值处理&lt;/h2&gt;
+
+&lt;h3 id=&quot;缓存buffer&quot;&gt;缓存：buffer&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;buffer：给定 Observable 触发时传 source 缓存的值，每次重新缓存&lt;/li&gt;
+  &lt;li&gt;bufferCount：
+    &lt;ul&gt;
+      &lt;li&gt;(bufferSize, startBufferEvery)，到 bufferSize 时开始缓存，每次新增 startBufferEvery 时更新缓存并发出新的 Observable&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;bufferTime：
+    &lt;ul&gt;
+      &lt;li&gt;(time)：每 time 时间发送一次在过去 n 秒内 source 的新值&lt;/li&gt;
+      &lt;li&gt;(next, every)：每 every 时间发送过去 next 时间内 source 的新值&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;bufferToggle：
+    &lt;ul&gt;
+      &lt;li&gt;(openings, closingSelector)：发送在 openings 和对应的 closingSelector 之间 source 产生的值&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;bufferWhen：
+    &lt;ul&gt;
+      &lt;li&gt;(closingSelector)：发送在 closingSelector 触发之前 source 产生的值&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;多播-observable-相关&quot;&gt;多播 Observable 相关&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;publish：处理成 connectable Observable，需要先 connect 才会 next 值&lt;/li&gt;
+  &lt;li&gt;refCount：使 ConnectableObservable 像常规 Observable 一样，直接 subscribe 就会获得发出的值&lt;/li&gt;
+  &lt;li&gt;share：pipe(share( ))，相当于 multicast(( ) =&amp;gt; new Subject( )) 和 refCount( )&lt;/li&gt;
+  &lt;li&gt;shareReplay：&lt;/li&gt;
+  &lt;li&gt;publishBehaviour：subscribe 时先发送当前值&lt;/li&gt;
+  &lt;li&gt;publishLast：返回 connectable observable 序列，只发送 complete 前的最后一个值&lt;/li&gt;
+  &lt;li&gt;publishReplay：(bufferSize, windowTime, selectorOrScheduler, scheduler)，subscribe 时发送 n 个&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;作用于-complete&quot;&gt;作用于 complete&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;count：不传参统计 next 次数，传函数为参数，统计符合函数条件的值的个数&lt;/li&gt;
+  &lt;li&gt;max：过程中最大值&lt;/li&gt;
+  &lt;li&gt;min：过程中最小值&lt;/li&gt;
+  &lt;li&gt;reduce：在 complete 的时候发出最后的 reduce 结果&lt;/li&gt;
+  &lt;li&gt;distinct：对 source 所有发出的值进行去重，在 complete 的时候给出&lt;/li&gt;
+  &lt;li&gt;endWith：在 source complete 之后，再发一个值再 complete&lt;/li&gt;
+  &lt;li&gt;defaultIfEmpty：如果 source 在 complete 时都未发出任何值，则将这个值传出&lt;/li&gt;
+  &lt;li&gt;throwIfEmpty：如果 source 在 complete 时都未发出任何值，抛出 EmptyError&lt;/li&gt;
+  &lt;li&gt;elementAt：返回 source 发出的事件流的给定 index 的事件&lt;/li&gt;
+  &lt;li&gt;every：返回 source 发出的事件流的所有值是否符合该函数要求&lt;/li&gt;
+  &lt;li&gt;find：返回 source 发出事件流的所有值中第一个符合要求的值，并且 complete&lt;/li&gt;
+  &lt;li&gt;findIndex：返回 source 发出的所有值中第一个符合要求的 index，并且 complete&lt;/li&gt;
+  &lt;li&gt;first：传参则返回 source 发出的所有值中第一个符合要求的值，不传参返回第一个；并 complete、&lt;/li&gt;
+  &lt;li&gt;ignoreElements：忽略 source 的所有值，在 complete 或 error 的时候告知&lt;/li&gt;
+  &lt;li&gt;isEmpty：在 complete 的时候告知 source 是否发送过值，没有为 true&lt;/li&gt;
+  &lt;li&gt;last：在 complete 的时候给出 source 发送的最后一个值&lt;/li&gt;
+  &lt;li&gt;sequenceEqual：source 与 传入的 Observable 发出的值是否完全一致&lt;/li&gt;
+  &lt;li&gt;single：是否有且只有一个符合要求的值，不同情况返回值不一样&lt;/li&gt;
+  &lt;li&gt;toArray：在 complete 时，将 source 所有发出的值串成 Array 发出&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;作用于过程&quot;&gt;作用于过程&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;dematerialize：将 Observable of Notifications 转化为 actual Observable&lt;/li&gt;
+  &lt;li&gt;materialize：将 source 发出的所有值转化为 Notification，并带有类型说明（next 还是 error）&lt;/li&gt;
+  &lt;li&gt;mergeScan：缓存中间计算结果，每次可以根据之前的结果进行计算&lt;/li&gt;
+  &lt;li&gt;scan：与 mergeScan 差不多&lt;/li&gt;
+  &lt;li&gt;groupBy：对 source 发出事件流的所有值做分组，返回多个 GroupedObservable，每组一个&lt;/li&gt;
+  &lt;li&gt;map：对 source 的值做转换，将结果值转化为 Observable 发出&lt;/li&gt;
+  &lt;li&gt;mapTo：Observable 发出的值转化为固定值&lt;/li&gt;
+  &lt;li&gt;multicast：将 source 转化为多播的 Observable&lt;/li&gt;
+  &lt;li&gt;expand：用前一个 Observable 的值递归构造新 Observable，最后 merge 成一个，用返回 Empty 或者 take/takeUntil 停止&lt;/li&gt;
+  &lt;li&gt;pairwise：将 source 相邻的值发出，bufferCount(2,1)？&lt;/li&gt;
+  &lt;li&gt;pluck：将 source 发出的值中键为 key 的值取出，多个值就一直取&lt;/li&gt;
+  &lt;li&gt;repeat：返回多次 subscribe source 的 Observable，重复发送 complete 之前的所有值&lt;/li&gt;
+  &lt;li&gt;retry：source error 时，重新 subscribe，最大次数为 count&lt;/li&gt;
+  &lt;li&gt;repeatWhen：每次传入的 Observable 触发时，重复 source complete 之前的所有值，如果前一次重复还未结束，会进行新一次的重复&lt;/li&gt;
+  &lt;li&gt;retryWhen，传入的 Observable 触发时，重复 source error 之前的所有值&lt;/li&gt;
+  &lt;li&gt;startWith：指定 source 第一个发出的值&lt;/li&gt;
+  &lt;li&gt;tap：对 source 的所有值都做副作用处理，但是返回一个与 source 相同的 Observable&lt;/li&gt;
+  &lt;li&gt;timeInterval：返回当前值，和收到当前值与上一个值之间的时间间隔&lt;/li&gt;
+  &lt;li&gt;timestamp：返回值与当前值产生的事件&lt;/li&gt;
+  &lt;li&gt;withLatestFrom：source 有新值时，返回给定 Observable 的最新值&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;错误处理&quot;&gt;错误处理&lt;/h1&gt;
+
+&lt;h2 id=&quot;operators&quot;&gt;operators&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;catchError：错误处理&lt;/li&gt;
+  &lt;li&gt;finalize: 返回一个 source 的镜像 Observable，但是在 complete 或 error 时调用指定函数&lt;/li&gt;
+  &lt;li&gt;ignoreElements：忽略 source 的所有值，在 complete 或 error 的时候告知&lt;/li&gt;
+  &lt;li&gt;timeout：指定时间内，source 没有发出值则直接 error&lt;/li&gt;
+  &lt;li&gt;throwIfEmpty：如果 source 在 complete 时都未发出任何值，抛出 EmptyError&lt;/li&gt;
+  &lt;li&gt;retry：source error 时，重新 subscribe，最大次数为 count&lt;/li&gt;
+  &lt;li&gt;retryWhen，传入的 Observable 触发时，重复 source error 之前的所有值，最多执行 n 次&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;function&quot;&gt;function&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;onErrorResumeNext：source 出错或者 complete，执行传入的 Observable，source 不会触发 erro&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;函数总结&quot;&gt;函数总结&lt;/h1&gt;
+
+&lt;h2 id=&quot;多个-observable-转一个&quot;&gt;多个 Observable 转一个&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;combineLatest&lt;/li&gt;
+  &lt;li&gt;Concat&lt;/li&gt;
+  &lt;li&gt;merge&lt;/li&gt;
+  &lt;li&gt;zip&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;observable-创建&quot;&gt;Observable 创建&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;defer&lt;/li&gt;
+  &lt;li&gt;forkJoin&lt;/li&gt;
+  &lt;li&gt;from&lt;/li&gt;
+  &lt;li&gt;fromEvent&lt;/li&gt;
+  &lt;li&gt;fromEventPattern&lt;/li&gt;
+  &lt;li&gt;generate：(init, endCondition, generateFunc) 创建一系列值，&lt;/li&gt;
+  &lt;li&gt;Identity：&lt;/li&gt;
+  &lt;li&gt;iif：(condition, trueResult, falseResult) 在 subscribe 时根据条件控制具体执行哪个 Observable&lt;/li&gt;
+  &lt;li&gt;interval：创建隔固定时间发送值的 Observable&lt;/li&gt;
+  &lt;li&gt;of&lt;/li&gt;
+  &lt;li&gt;pairs：将 object 转化为一系列 [key, value] 值的 Observable&lt;/li&gt;
+  &lt;li&gt;partition：将 source Observable 分为两个 Observable，一个全是符合条件的值，另一个是不符合的&lt;/li&gt;
+  &lt;li&gt;race：返回最快开始发送值的 Observable 的最新值&lt;/li&gt;
+  &lt;li&gt;range：(start, count, scheduler)&lt;/li&gt;
+  &lt;li&gt;scheduled：&lt;/li&gt;
+  &lt;li&gt;throwError：创建一个没有发出任何值直接 error 的 Observable&lt;/li&gt;
+  &lt;li&gt;timer：(dueTime, periodOrScheduler) 创建一个 dueTime 之后开始，每隔 period 之后发索引值的 Observable&lt;/li&gt;
+  &lt;li&gt;using：(resourceFactory, observableFactory)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;其他&quot;&gt;其他&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;isObservable&lt;/li&gt;
+  &lt;li&gt;noop&lt;/li&gt;
+  &lt;li&gt;onErrorResumeNext：source 出错或者 complete ，执行传入的 Observable，source 不会触发 error&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;一些实践场景&quot;&gt;一些实践场景&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;搜索框（防抖、取最新一次异步结果，去重）&lt;/li&gt;
+  &lt;li&gt;动态拉数据渲染图表（n 个数据之后每次缓存 n 个数据）—— 《新手视角 - RxJS 之实时监控图表》&lt;/li&gt;
+  &lt;li&gt;全局共享数据，使用 BehaviorSubject —— ex-child 项目中的使用&lt;/li&gt;
+  &lt;li&gt;拖拽（mousedown、mousemoving、mouseup 等事件之间有联系的事件处理）&lt;/li&gt;
+  &lt;li&gt;事件合并（PC 端、移动端 click 事件合并处理）&lt;/li&gt;
+  &lt;li&gt;数据量比较大时的处理&lt;/li&gt;
+  &lt;li&gt;《使用 React + Rxjs 实现一个虚拟滚动组件》&lt;/li&gt;
+  &lt;li&gt;对先后/并发要求比较高的场景&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;个人体验&quot;&gt;个人体验&lt;/h1&gt;
+
+&lt;p&gt;关于 why/when use 问题比较好的一篇文章 《What is RxJS? And Why You Should Know About It》&lt;/p&gt;
+
+&lt;h2 id=&quot;好用的地方&quot;&gt;好用的地方&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;丰富的 operators API 使得少写很多代码，少创建很多临时变量（比 Spark 这种灵活方便很多）&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;h2 id=&quot;rxjs-allows-you-to-solve-hard-problems-with-less-code-promotes-maintainability-readability-flexibility-and-compostability&quot;&gt;RxJS allows you to solve hard problems with less code, promotes maintainability, readability, flexibility, and compostability.&lt;/h2&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Observable / data push 模式在处理异步问题上，比 callback、Promise 都更简洁有效&lt;/li&gt;
+  &lt;li&gt;Promise 只能处理一个 value&lt;/li&gt;
+  &lt;li&gt;Promise 不能取消&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;-&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;可以和很多框架搭配使用，包括最新的 React Hooks&lt;/li&gt;
+  &lt;li&gt;《像呼吸一样自然：React hooks + RxJS》&lt;/li&gt;
+  &lt;li&gt;《更好用的 RxJS+React hooks 集成方案》&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;-&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;多事件源/事件处理地情景方便处理。在仅有的几次实践中比较认同的话：&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;In the case of RxJS, the problem being solved is the ability to handle asynchronous calls with multiple events&lt;/li&gt;
+  &lt;li&gt;—— 《What is RxJS? And Why You Should Know About It》&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;比较难烦的点&quot;&gt;比较难/烦的点&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;文档太差了，没有整体设计的阐述（一开始难理解）&lt;/li&gt;
+  &lt;li&gt;API 多但是搜索功能差，使用的时候比较难找到自己想要用的东西&lt;/li&gt;
+  &lt;li&gt;API 太多了，掌握（背诵）程度直接影响代码质量、写代码过程的便捷程度，学习曲线陡峭&lt;/li&gt;
+  &lt;li&gt;管道流式处理的过程中，要注意自己 pipe 中的每一步想返回什么类型，有些返回 Observable，有些返回的是高阶 Observable 。大多数情况下是什么时候使用 map，什么时候使用 xxxMap。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;个人练习代码&quot;&gt;个人练习代码&lt;/h1&gt;
+
+&lt;h2 id=&quot;搜索框&quot;&gt;搜索框&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;useEffect(() =&amp;gt; {
+    if (inputRef.current) {
+      fromEvent(inputRef.current!, &quot;input&quot;)
+        .pipe(
+          debounceTime(300),
+          map((event: any) =&amp;gt; event.target.value),
+          distinctUntilChanged(),
+          switchMap(async (value: any, _index) =&amp;gt; {
+            try {
+              return await search(value);
+            } catch (e) {
+              return null;
+            }
+          })
+        )
+        .subscribe(console.log);
+    }
+}, []);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;拖拽事件&quot;&gt;拖拽事件&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;const [position, setPosition] = useState({ x: 0, y: 0 });
+useEffect(() =&amp;gt; {
+  const positionObservable = new BehaviorSubject(position);
+  positionObservable.subscribe(val =&amp;gt; {
+    setPosition(val);
+  });
+
+  mouseDown
+    .pipe(
+      withLatestFrom(positionObservable),
+      map(([event, prev]: Array&amp;lt;any&amp;gt;) =&amp;gt; {
+        return { startX: event.clientX, startY: event.clientY, prev };
+      }),
+      switchMap(({ startX, startY, prev }) =&amp;gt; {
+        return mouseMove.pipe(
+          map((event: any) =&amp;gt; {
+            return {
+              x: prev.x + event.clientX - startX,
+              y: prev.y + event.clientY - startY
+            };
+          }),
+          takeUntil(mouseUp)
+        );
+      })
+    )
+    .subscribe(pos =&amp;gt; {
+      positionObservable.next(pos);
+    });
+}, []);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;拖拽事件--抽出-hook&quot;&gt;拖拽事件 —— 抽出 Hook&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;const [positionState, setPosition, positionSubject] = useBehaviorSubject({
+    x: 0,
+    y: 0
+});
+
+useEffect(() =&amp;gt; {
+    mouseDown
+      .pipe(
+        withLatestFrom(positionSubject),
+        map(([event, prev]: Array&amp;lt;any&amp;gt;) =&amp;gt; {
+          return { startX: event.clientX, startY: event.clientY, prev };
+        }),
+        switchMap(({ startX, startY, prev }) =&amp;gt; {
+          return mouseMove.pipe(
+            map((event: any) =&amp;gt; {
+              return {
+                x: prev.x + event.clientX - startX,
+                y: prev.y + event.clientY - startY
+              };
+            }),
+            takeUntil(mouseUp)
+          );
+        })
+      )
+      .subscribe(pos =&amp;gt; {
+        setPosition(pos);
+      });
+},[]
+
+export const useBehaviorSubject = initVal =&amp;gt; {
+  const subjectRef = useRef&amp;lt;any&amp;gt;();
+  const [state, setState] = useState(initVal);
+
+  if (!subjectRef.current) {
+    subjectRef.current = new BehaviorSubject(initVal);
+  }
+
+  const triggerNewVal = useCallback(value =&amp;gt; {
+    if (subjectRef.current) {
+      subjectRef.current!.next(value);
+    }
+  }, []);
+
+  useEffect(() =&amp;gt; {
+    subjectRef.current.subscribe(value =&amp;gt; {
+      setState(value);
+    });
+    return () =&amp;gt; {
+      subscription.unsubscribe();
+      subjectRef.current.complete();
+    };
+  }, []);
+
+  return [state, triggerNewVal, subjectRef.current];
+};
+&lt;/code&gt;&lt;/pre&gt;</content><author><name></name></author><summary type="html">在字节跳动新社区 EX 前端组实习期间的产物，主要是介绍一下如何入门比较好以及 RxJS 和 React Hooks 的结合使用。</summary></entry><entry><title type="html">Start of the rest</title><link href="http://localhost:4000/life/2017/12/10/start.html" rel="alternate" type="text/html" title="Start of the rest" /><published>2017-12-10T00:00:00+08:00</published><updated>2017-12-10T00:00:00+08:00</updated><id>http://localhost:4000/life/2017/12/10/start</id><content type="html" xml:base="http://localhost:4000/life/2017/12/10/start.html">&lt;p&gt;个站拖了两年，在换了好几个设计稿之后，终于搭好了。&lt;/p&gt;
 
 &lt;p&gt; &lt;/p&gt;
 
@@ -23,13 +600,13 @@
 
 &lt;p&gt;现在坐在被子里写东西，网易云播放的是《If You Feel My Love》，下午两点的阳光透过阳台照到我的碎花小被子上，是个暖洋洋的冬日午后。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/posts/171210.jpg&quot; alt=&quot;冬日午后&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://localhost:4000/assets/posts/171210.jpg&quot; alt=&quot;冬日午后&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt; &lt;/p&gt;
 
 &lt;p&gt;人生中每一刻都是余生的开始，但个站的第一篇博客还是很不同的。&lt;/p&gt;
 
-&lt;p&gt;这两年期间经历了很多事情，临近2017年末，心态趋于平和，希望之后一切都好。&lt;/p&gt;</content><author><name></name></author><summary type="html">个站拖了两年，在换了好几个设计稿之后，终于搭好了。</summary></entry><entry><title type="html">REST API 学习笔记</title><link href="/tech/2017/06/27/RESTFULAPI.html" rel="alternate" type="text/html" title="REST API  学习笔记" /><published>2017-06-27T00:00:00+08:00</published><updated>2017-06-27T00:00:00+08:00</updated><id>/tech/2017/06/27/RESTFULAPI</id><content type="html" xml:base="/tech/2017/06/27/RESTFULAPI.html">&lt;p&gt;为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。&lt;/p&gt;
+&lt;p&gt;这两年期间经历了很多事情，临近2017年末，心态趋于平和，希望之后一切都好。&lt;/p&gt;</content><author><name></name></author><summary type="html">个站拖了两年，在换了好几个设计稿之后，终于搭好了。</summary></entry><entry><title type="html">REST API 学习笔记</title><link href="http://localhost:4000/tech/2017/06/27/RESTFULAPI.html" rel="alternate" type="text/html" title="REST API  学习笔记" /><published>2017-06-27T00:00:00+08:00</published><updated>2017-06-27T00:00:00+08:00</updated><id>http://localhost:4000/tech/2017/06/27/RESTFULAPI</id><content type="html" xml:base="http://localhost:4000/tech/2017/06/27/RESTFULAPI.html">&lt;p&gt;为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。&lt;/p&gt;
 
 &lt;h2 id=&quot;rest-是基于资源的&quot;&gt;REST 是基于资源的&lt;/h2&gt;
 &lt;ol&gt;
@@ -131,7 +708,7 @@ DELETE /user/:id # 删除id用户（注销）&lt;/p&gt;
 使用可以自由添加 body 的库，使用的库不可以自由添加 body 时：
 DELETE /posts?id=1,2,3,4
 DELETE /posts?id&amp;gt;3&amp;amp;id&amp;lt;5
-修改和新增不是直接在 body 里面加 list 就好了嘛？&lt;/p&gt;</content><author><name></name></author><summary type="html">为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。</summary></entry><entry><title type="html">Web 框架中对于 MVC 架构的优化策略</title><link href="/tech/2017/06/12/MVC.html" rel="alternate" type="text/html" title="Web 框架中对于 MVC 架构的优化策略" /><published>2017-06-12T00:00:00+08:00</published><updated>2017-06-12T00:00:00+08:00</updated><id>/tech/2017/06/12/MVC</id><content type="html" xml:base="/tech/2017/06/12/MVC.html">&lt;p&gt;MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。
+修改和新增不是直接在 body 里面加 list 就好了嘛？&lt;/p&gt;</content><author><name></name></author><summary type="html">为了在适应多平台前端的同时，使得开发便捷快速，后端需要为不同的前端提供统一的数据接口，而接口的制定也要符合一定的规范。最近看了 RESTFUL API 相关内容，做了一些笔记。</summary></entry><entry><title type="html">Web 框架中对于 MVC 架构的优化策略</title><link href="http://localhost:4000/tech/2017/06/12/MVC.html" rel="alternate" type="text/html" title="Web 框架中对于 MVC 架构的优化策略" /><published>2017-06-12T00:00:00+08:00</published><updated>2017-06-12T00:00:00+08:00</updated><id>http://localhost:4000/tech/2017/06/12/MVC</id><content type="html" xml:base="http://localhost:4000/tech/2017/06/12/MVC.html">&lt;p&gt;MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。
 MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。&lt;/p&gt;
 
 &lt;p&gt;在 web2.0 兴起后，网页应用不满足于单纯的静态数据展示，需要根据用户的行为展示不同的信息，之前的服务器端直接返回静态页面的交互方式已经不适用。MVC 架构模式的特性使得它也可以很好的支持 web 开发，因此很多语言也为使用 MVC 架构构建 web 应用提供了解决方案 —— 提供模板引擎，比如 Python 的 Django。这种开发技术的主要思想便是使用模板引擎作为 view，根据 Controller 传入的 Model 渲染出对应的 HTML 页面传回客户端浏览器。&lt;/p&gt;
@@ -153,7 +730,7 @@ MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模
 
 &lt;p&gt;MVVM 是 Model-View-ViewModel 的缩写，源于 MVP 架构，它的主要思想是为 View 单独构建一个特殊的 Model 即 ViewModel。
 下图展示了 MVC、MVP 和 MVVM 之间的联系和区别。
-&lt;img src=&quot;/assets/12969C82C646C4E85D99C12BF2438EA9.png&quot; alt=&quot;MVVM-comparson.png&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/12969C82C646C4E85D99C12BF2438EA9.png&quot; alt=&quot;MVVM-comparson.png&quot; /&gt;
 MVP 对 MVC 的改进是切断了 View 和 Model 之间的直接联系，将 Controller 变为 Presenter，直接改变 View。三个部分之间的两两单向循环数据流变成了双向的数据流。
 个人理解是，这样的优化使得模块之间的关系更加简单，对于 View 和 Model  来说，改变的来源和得到用户交互后需要通知的组件变为了同一个。
 MVVM 乍看和 MVP 一样（确实也没多大差别），不过他们最重要的区别在于 View 和 Controller（简化称呼，即 MVP 里的 Presenter 和 MVVM 里的 ViewModel）之间的交互方式。下面是某篇博文里的说明：&lt;/p&gt;
@@ -234,15 +811,15 @@ function todoApp(state = initialState, action) {
 
 &lt;p&gt;简单来说，Redux 将传统 MVC 架构中的 Controller 分为了 Action 和 Reducer 两个部分，前者描述要做出什么样的改变，后者实现改变。
 Redux 和 React 配合使用时，React 负责 view 的部分，view 根据 Store 内容做出相应的展示，接受到用户操作时，通过发出 Action 来实现和用户的交互。各部分之间的关系如下：
-&lt;img src=&quot;/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg&quot; alt=&quot;Relation&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;http://localhost:4000/assets/01CFC892FD9771EFBAF20AC0307CA2D1.jpg&quot; alt=&quot;Relation&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;除此之外，需要关注的是当应用复杂时，我们应该拆分 Reducer，即使用更多的 Reducer 来处理 Action，而不是创建更多的 Store。在 Redux 中，Store 始终是单一的。这一点和另外一种架构前端处理数据的框架 Flux 有很大的区别，Flux 的做法是使用多个 store，但是使用单一的 dispatcher 来分发处理 Action，对比图如下。
 左边是 Flux，右边是 Redux。
-&lt;img src=&quot;/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png&quot; alt=&quot;ReduxFlux.png&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/96ABBACDCFCAA6A9DDC590D68FF0EC52.png&quot; alt=&quot;ReduxFlux.png&quot; /&gt;
 对比之下会发现在这一点上 Redux 对 Flux 的改进简直是非常天才的。
 单一的 Store 减少了 Java 的仪式感：单一的树状状态数据可以用最简洁的方式存储全局的数据，不同组件用相同数据时，只要拿相同的部分就可以了。而传统的 Java 服务端中，是用多个 Model 存储不同的数据，对于以界面展示为重要功能的前端中，这样的方式显得非常冗余。
 多个 Reducer 处理解决了单一 dispatcher 会有性能瓶颈的问题。
-而单一的数据源，映射到不同的组件中，各组件根据用户的操作会发出 Action，最终会产生新的 Store 树。这样的先映射再分别处理的方法，让人联想到数据处理中的 Map-Reduce 架构模式，从数据流角度来看 Redux，则有新的体会了。&lt;/p&gt;</content><author><name></name></author><summary type="html">MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。 MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。</summary></entry><entry><title type="html">Transition Motion in Material Design</title><link href="/tech/2017/05/11/test.html" rel="alternate" type="text/html" title="Transition Motion in Material Design" /><published>2017-05-11T00:00:00+08:00</published><updated>2017-05-11T00:00:00+08:00</updated><id>/tech/2017/05/11/test</id><content type="html" xml:base="/tech/2017/05/11/test.html">&lt;p&gt;Material Design 中最让人眼前一亮的应该就是它推出的动效标准了，这次仔细地看完了 Material Design 的所有官方文档，对其中的动效做了探究。&lt;/p&gt;
+而单一的数据源，映射到不同的组件中，各组件根据用户的操作会发出 Action，最终会产生新的 Store 树。这样的先映射再分别处理的方法，让人联想到数据处理中的 Map-Reduce 架构模式，从数据流角度来看 Redux，则有新的体会了。&lt;/p&gt;</content><author><name></name></author><summary type="html">MVC 架构出现在二十世纪八十年代，至今已有三十多年的应用历史，作为一个经典的设计模式，它得到了非常广泛的应用。 MVC 的优点非常明显：将应用分为 Model、View 和 Controller，各模块之间的耦合性较低，Model 和 View 的代码可以有非常高的复用率。问题主要集中在 Controller 部分 —— 不好的设计通常会使得 Controller 过于庞大和复杂，继而难以调试。不过这些问题也有了通常的解决方法，便是将一部分代码隔离出去，比如与数据库的链接、初始化界面。</summary></entry><entry><title type="html">Transition Motion in Material Design</title><link href="http://localhost:4000/tech/2017/05/11/test.html" rel="alternate" type="text/html" title="Transition Motion in Material Design" /><published>2017-05-11T00:00:00+08:00</published><updated>2017-05-11T00:00:00+08:00</updated><id>http://localhost:4000/tech/2017/05/11/test</id><content type="html" xml:base="http://localhost:4000/tech/2017/05/11/test.html">&lt;p&gt;Material Design 中最让人眼前一亮的应该就是它推出的动效标准了，这次仔细地看完了 Material Design 的所有官方文档，对其中的动效做了探究。&lt;/p&gt;
 
 &lt;h3 id=&quot;principles&quot;&gt;Principles&lt;/h3&gt;
 &lt;hr /&gt;
@@ -267,10 +844,10 @@ The fundamentals of light, surface, and movement are key to conveying how object
 物体之间的高度和距离是通过阴影展现和区别的。这样的规定，不仅展示了静态元素之间的高度关系，还在元素的动态变换中给出了一些逻辑。&lt;/p&gt;
 
 &lt;p&gt;在官方给出的标准中，每一种控件都有自己应有的高度：
-&lt;img src=&quot;/assets/BA52FA4533A95466A319B2AEE5B71ED0.png&quot; alt=&quot;whatismaterial_3d_elevation2.png&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;http://localhost:4000/assets/BA52FA4533A95466A319B2AEE5B71ED0.png&quot; alt=&quot;whatismaterial_3d_elevation2.png&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;实际的例子：
-&lt;img src=&quot;/assets/995059C0D554562A0CCE211C7C02301C.jpg&quot; alt=&quot;995059C0D554562A0CCE211C7C02301C.jpg&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;http://localhost:4000/assets/995059C0D554562A0CCE211C7C02301C.jpg&quot; alt=&quot;995059C0D554562A0CCE211C7C02301C.jpg&quot; /&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;bold-graphic-intentional---通过基于印刷的设计强调关注点制造沉浸式体验&quot;&gt;Bold, graphic, intentional - 通过基于印刷的设计强调关注点，制造沉浸式体验&lt;/h4&gt;
 &lt;p&gt;官方文档中对这一项的说明有：&lt;/p&gt;
@@ -284,10 +861,10 @@ They create hierarchy, meaning, and focus.
 &lt;p&gt;在 Material Design 中，使用这些元素并不仅仅是做一套纯视觉的、愉悦眼球的设计规范，其核心思想是使用印刷中所用到的技术，来引导用户的浏览顺序、给出需要用户关注的强调点，从而制造沉浸式的用户体验。&lt;/p&gt;
 
 &lt;p&gt;在官方给出的两个例子中，可以很明显地展现这一点：
-&lt;img src=&quot;/assets/7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; alt=&quot;7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; alt=&quot;7F5407ECFF8A9BE18BCF486E81ECBFAC.png&quot; /&gt;
 &lt;em&gt;这个界面是以信息展示为主要的服务，功能性的按钮不应该突出显示，右图的突出按钮破坏了用户浏览内容时收到的信息流，比较突兀。&lt;/em&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; alt=&quot;DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; /&gt;
+&lt;p&gt;&lt;img src=&quot;http://localhost:4000/assets/DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; alt=&quot;DC4083B097D7FC206E3CD5ECCCA6F0CE.png&quot; /&gt;
 这个界面提供的服务是对于应用的设置，是一个功能性的界面，应该让用户在最短的时间内找到自己可以进行的所有操作，显然左图更加合适。&lt;/p&gt;
 
 &lt;p&gt;除此之外，这一项的官方说明还有这样的一句话：&lt;/p&gt;
@@ -295,7 +872,7 @@ They create hierarchy, meaning, and focus.
   &lt;p&gt;An emphasis on user actions makes core functionality immediately apparent and provides waypoints for the user.
 对于用户操作的关注让核心功能立即明显，并且为用户提供了视觉停留点
 视频：button的不同状态
-&lt;a href=&quot;/assets/8B4CFE77C56BFB6B3D7CCEE8B0852EA1.mp4&quot;&gt;components-buttons-raisedbuttons.mp4&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;http://localhost:4000/assets/8B4CFE77C56BFB6B3D7CCEE8B0852EA1.mp4&quot;&gt;components-buttons-raisedbuttons.mp4&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h4 id=&quot;motion-provides-meaning---移动是有意义的&quot;&gt;Motion provides meaning - 移动是有意义的&lt;/h4&gt;
@@ -320,9 +897,9 @@ Motion is meaningful and appropriate, serving to focus attention and maintain co
 &lt;/blockquote&gt;
 
 &lt;p&gt;Do &amp;amp; Dont
-&lt;a href=&quot;/assets/2F2C16BA85645A30E64E07D5C7D04F0F.mp4&quot;&gt;ShiftWithin_01_Upward_Do_v3.mp4&lt;/a&gt;
-&lt;a href=&quot;/assets/B370893CE808F0DDC083F0DA62E47EB2.mp4&quot;&gt;ShiftWithin_02_Upward_Dont_v3.mp4&lt;/a&gt;
-&lt;a href=&quot;/assets/8295EFA7C63E0E97ED12DCEF360CF8C0.mp4&quot;&gt;Natural_03_Transform-v3.mp4&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;http://localhost:4000/assets/2F2C16BA85645A30E64E07D5C7D04F0F.mp4&quot;&gt;ShiftWithin_01_Upward_Do_v3.mp4&lt;/a&gt;
+&lt;a href=&quot;http://localhost:4000/assets/B370893CE808F0DDC083F0DA62E47EB2.mp4&quot;&gt;ShiftWithin_02_Upward_Dont_v3.mp4&lt;/a&gt;
+&lt;a href=&quot;http://localhost:4000/assets/8295EFA7C63E0E97ED12DCEF360CF8C0.mp4&quot;&gt;Natural_03_Transform-v3.mp4&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;layouts&quot;&gt;Layouts&lt;/h3&gt;
 &lt;hr /&gt;
@@ -354,10 +931,10 @@ Motion is meaningful and appropriate, serving to focus attention and maintain co
 &lt;h5 id=&quot;从-list-item-到-detail-page&quot;&gt;从 List Item 到 Detail Page&lt;/h5&gt;
 
 &lt;p&gt;当转换是从列表中的一项转化到详情页时，通常伴有共有内容的转移，有一点像 keynote 中的“神奇移动”，这一种做法非常棒。第一是当数据需要从远程获取时，预填充了一些已有的数据，减少用户的等待感；二是展示了前后页面的联系，给出了动效过程的逻辑。
-&lt;a href=&quot;/assets/A817D7AC3E18C159FA43BF33D2D9B7A4.mp4&quot;&gt;GoodTransition_Cohesive-v4.mp4&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;http://localhost:4000/assets/A817D7AC3E18C159FA43BF33D2D9B7A4.mp4&quot;&gt;GoodTransition_Cohesive-v4.mp4&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;在官方文档中还指出，全屏扩展的内容，左上角应该是 x 而不是返回按钮：
-&lt;img src=&quot;/assets/19320BE52E3E69EFE5D47D5E88F9F600.png&quot; alt=&quot;19320BE52E3E69EFE5D47D5E88F9F600.png&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;http://localhost:4000/assets/19320BE52E3E69EFE5D47D5E88F9F600.png&quot; alt=&quot;19320BE52E3E69EFE5D47D5E88F9F600.png&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;Material Design 对 页面父子关系的解释和 iOS 中的有明显不同。
 Material Design 中，父子的关系通过 z 轴高度展示，父的 z 轴高度比子的小。比如从 List Item 到 Detail Page 的转换可以看做是，当一个元素作为展示新页面的基础时，需要先提升自己的 z 轴高度，从 Parent 的高度提升至 Child View 的高度，再进行内容的展示。
@@ -367,13 +944,13 @@ Material Design 中，父子的关系通过 z 轴高度展示，父的 z 轴高�
 
 &lt;h5 id=&quot;从-buttonicon-到-function-page&quot;&gt;从 Button/Icon 到 Function Page&lt;/h5&gt;
 &lt;p&gt;当页面是由按钮或图标触发的时候，新页面通常是一个功能性的页面，这个页面是怎么出现的，在 Material Design 的动效中也给出了解释。
-&lt;a href=&quot;/assets/7BE09C7B1415C86442D8EEF48CA71552.mp4&quot;&gt;components-buttons-fab-transition_fullscreen_02.mp4&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;http://localhost:4000/assets/7BE09C7B1415C86442D8EEF48CA71552.mp4&quot;&gt;components-buttons-fab-transition_fullscreen_02.mp4&lt;/a&gt;&lt;/p&gt;
 
 &lt;h4 id=&quot;sibling-to-sibling&quot;&gt;Sibling-to-sibling&lt;/h4&gt;
 &lt;p&gt;兄弟节点之间的跳转通常使用的是 Tab Navigator，当条目过多时，还可以使用可滚动的导航。
-&lt;a href=&quot;/assets/1477318463F7789BB0A67000AC1492EE.mp4&quot;&gt;components-tabs-typesoftabs_scrollable_tabs_01_xhdpi_003.mp4&lt;/a&gt;
+&lt;a href=&quot;http://localhost:4000/assets/1477318463F7789BB0A67000AC1492EE.mp4&quot;&gt;components-tabs-typesoftabs_scrollable_tabs_01_xhdpi_003.mp4&lt;/a&gt;
 还有一个比较像的是 Bottom Navigation：
-&lt;a href=&quot;/assets/977E6424856276DC1B38E0E4C4CD6EA5.mp4&quot;&gt;components_bottomnavigation_behavior_crossfade.mp4&lt;/a&gt;
+&lt;a href=&quot;http://localhost:4000/assets/977E6424856276DC1B38E0E4C4CD6EA5.mp4&quot;&gt;components_bottomnavigation_behavior_crossfade.mp4&lt;/a&gt;
 这里要注意区分 Tab Navigator 与 Bottom Navigation 之间的区别：&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;Tab Navigator 的内容可以很多，多的时候可以选择可滚动的导航；而 Bottom Navigation 的导航个数是确定的，通常是3-4个，不可以滚动。&lt;/li&gt;
@@ -402,13 +979,13 @@ FAB 是浮在界面上方的原型的图标，它在获得焦点的时候会改�
 &lt;h4 id=&quot;alerts-的提示语句和两个选择的文本表达&quot;&gt;Alerts 的提示语句和两个选择的文本表达&lt;/h4&gt;
 &lt;p&gt;之前人机交互课程的时候，就讲过这个 Alert 的确定和取消按钮的摆放位置，实际上在要用户做选择的时候，需要注意的不仅是两个选择的位置，还有问问题的方式，以及修改 Confirm 和 Cancel 按钮的文字为更加有指向性的文本。
 问问题的时候应该尽量避免否定性的问题。比如说下图中的例子，在新建一个事件没有保存就要退出的时候，问 “Discard new event？”不如询问“Save new Event？”，除了减少用户思考的时间（牵扯到双重否定转肯定的问题）外，还有鼓励用户新建事件的意思在里面。
-&lt;img src=&quot;/assets/A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; alt=&quot;A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; alt=&quot;A33366B7CAA73D130DD2FB2F73A53279.jpg&quot; /&gt;
 按钮的文字应当尽量说明操作会造成的后果，而不是简单的一律都是确定/取消。
-&lt;img src=&quot;/assets/B0DE8152CAC7FE7E2746D80C8BE9BEC2.png&quot; alt=&quot;屏幕快照 2017-05-25 上午9.41.44.png&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;http://localhost:4000/assets/B0DE8152CAC7FE7E2746D80C8BE9BEC2.png&quot; alt=&quot;屏幕快照 2017-05-25 上午9.41.44.png&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;说到按钮文字，想到了 PS 和 Sketch 中，新建文档进行操作，没有保存就退出时，两个软件给出的不同提示。
-&lt;img src=&quot;/assets/A7362A5F484352BAB379A94E1C5FF5D8.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.21.53.png&quot; /&gt;
-&lt;img src=&quot;/assets/FE421CCF6E076A84D235B2598BCB8F0B.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.20.49.png&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/A7362A5F484352BAB379A94E1C5FF5D8.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.21.53.png&quot; /&gt;
+&lt;img src=&quot;http://localhost:4000/assets/FE421CCF6E076A84D235B2598BCB8F0B.png&quot; alt=&quot;屏幕快照 2017-05-22 上午11.20.49.png&quot; /&gt;
 对应位置上的按钮功能都是一样的，不过相比之下，Sketch 的 DELETE 文字，显然更能说明这个操作的后果是丢弃这个文件，而 PS 的“Dont’t save”则会让新手不晓得这个操作的后果是什么，也不能理解该选项和 cancel 之间有什么区别。&lt;/p&gt;
 
 &lt;p&gt;第一次写技术博客，尝试把自己的思路写下来，还是用了很多时间和努力，因为自己本身对这方面并没有很深的了解，写的东西也非常浅显。不过写的过程中在不断纠正提升自己的思路，感觉自己有了进步。&lt;/p&gt;</content><author><name></name></author><summary type="html">Material Design 中最让人眼前一亮的应该就是它推出的动效标准了，这次仔细地看完了 Material Design 的所有官方文档，对其中的动效做了探究。</summary></entry></feed>
